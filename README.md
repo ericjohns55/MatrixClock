@@ -9,12 +9,15 @@ A clock program written in C++ that runs off of an RGB LED Matrix.
 
 ## Example Images
 Default Clock Face
+
 <img src="images/image1.png" width="400" height="400">
 
 Dusk Clock Face
+
 <img src="images/image2.png" width="400" height="400">
 
 Night Time Clock Face
+
 <img src="images/image3.png" width="400" height="400">
 
 
