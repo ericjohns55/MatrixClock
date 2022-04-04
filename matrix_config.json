@@ -1,0 +1,205 @@
+{
+  "clock_faces": [
+    {
+      "name": "day",
+      "time_periods": [
+        {
+          "start_hour": 9,
+          "start_minute": 0,
+          "end_hour": 23,
+          "end_minute": 0
+        }
+      ],
+      "text_lines": [
+        {
+          "color": {
+            "built_in_color": "purple",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "small",
+		"x_position": -1,
+          "y_position": 8,
+          "text": "{day_name}"
+        },
+        {
+          "color": {
+            "built_in_color": "purple",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "small",
+		"x_position": -1,
+          "y_position": 16,
+          "text": "{month_name} {month_day}"
+        },
+        {
+          "color": {
+            "built_in_color": "red",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "large_bold",
+		"x_position": -1,
+          "y_position": 30,
+          "text": "{hour}:{minute}{ampm}"
+        },
+        {
+          "color": {
+            "built_in_color": "blue",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "medium",
+		"x_position": -1,
+          "y_position": 42,
+          "text": "{temp}F   {temp_feel}F"
+        },
+        {
+          "color": {
+            "built_in_color": "blue",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "medium",
+		"x_position": -1,
+          "y_position": 51,
+          "text": "{forecast_short}"
+        },
+        {
+          "color": {
+            "built_in_color": "blue",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "medium",
+		"x_position": -1,
+          "y_position": 60,
+          "text": "{wind_speed} mph"
+        }
+      ]
+    },
+    {
+      "name": "dusk",
+      "time_periods": [
+        {
+          "start_hour": 23,
+          "start_minute": 0,
+          "end_hour": 2,
+          "end_minute": 0
+        },
+        {
+          "start_hour": 8,
+          "start_minute": 0,
+          "end_hour": 9,
+          "end_minute": 0
+        }
+      ],
+      "text_lines": [
+        {
+          "color": {
+            "built_in_color": "night_time",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "small",
+		"x_position": -1,
+          "y_position": 8,
+          "text": "{day_name}"
+        },
+        {
+          "color": {
+            "built_in_color": "night_time",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "small",
+		"x_position": -1,
+          "y_position": 16,
+          "text": "{month_name} {month_day}"
+        },
+        {
+          "color": {
+            "built_in_color": "night_time",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "large_bold",
+		"x_position": -1,
+          "y_position": 30,
+          "text": "{hour}:{minute}{ampm}"
+        },
+        {
+          "color": {
+            "built_in_color": "night_time",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "medium",
+		"x_position": -1,
+          "y_position": 42,
+          "text": "{temp}F   {temp_feel}F"
+        },
+        {
+          "color": {
+            "built_in_color": "night_time",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "medium",
+		"x_position": -1,
+          "y_position": 51,
+          "text": "{forecast_short}"
+        },
+        {
+          "color": {
+            "built_in_color": "night_time",
+            "r": 0,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "medium",
+		"x_position": -1,
+          "y_position": 60,
+          "text": "{wind_speed} mph"
+        }
+      ]
+    },
+    {
+      "name": "night",
+      "time_periods": [
+        {
+          "start_hour": 2,
+          "start_minute": 0,
+          "end_hour": 8,
+          "end_minute": 0
+        }
+      ],
+      "text_lines": [
+        {
+          "color": {
+            "built_in_color": "none",
+            "r": 32,
+            "g": 0,
+            "b": 0
+          },
+          "font_size": "large_bold",
+		"x_position": -1,
+          "y_position": 35,
+          "text": "{hour}:{minute}{ampm}"
+        }
+      ]
+    }
+  ]
+}
