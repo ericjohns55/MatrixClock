@@ -9,15 +9,12 @@ A clock program written in C++ that runs off of an RGB LED Matrix.
 
 ## Example Images
 Default Clock Face
-
 <img src="images/image1.png" width="400" height="400">
 
 Dusk Clock Face
-
 <img src="images/image2.png" width="400" height="400">
 
 Night Time Clock Face
-
 <img src="images/image3.png" width="400" height="400">
 
 
@@ -113,26 +110,29 @@ X and Y positions:
 Text is a little more complicated because you most likely want the data printed to be current weather and time information.
 To make this easier I have created what I call *variables* to assist you in keeping the data updated.
 Here is a list of the current variables:
-```
-{hour} - the current hour in 12 hour format
-{hour24} - the current hour in 24 hour format (0-23)
-{minute} - the current minute
-{second} - the current second
-{ampm} - prints out am if it is before noon, pm if not
-{temp} - the current temperature outside
-{temp_feel} - the real feel outside
-{temp_low} - the low temperature for the day
-{temp_high} - the high temperature for the day
-{humidity} - the humidity outside
-{forecast} - the forecast outside (NOTE: this is typically too long to fit on the screen)
-{forecast_short} - a one word description of the weather outside (this can always fit on a screen)
-{date_format} - the date formatted in MM-DD-YYYY format
-{day_name} - the current day of the week
-{month_name} - the name of the current month
-{month_day} - the day of the month
-{week_day_num} - the day of the week (where 0 is sunday, 1 is monday, etc)
-{year} - the current year}
-```
+
+
+| Variable | Description | 
+| :---        |    :----   |
+| {hour} | the current hour in 12 hour format|
+| {hour24}   | the current hour in 24 hour format (0-23)|
+| {minute}   |  the current minute|
+| {second}   | the current second|
+| {ampm}   | prints out am if it is before noon, pm if not
+| {temp}   |the current temperature outside
+| {temp_feel}   | the real feel outside|
+| {temp_low}   | the low temperature for the day|
+| {temp_high}   | the high temperature for the day|
+| {humidity}   | the humidity outside|
+| {forecast}   | the forecast outside (NOTE: this is typically too long to fit on the screen)|
+| {forecast_short}   | a one word description of the weather outside (this can always fit on a screen)|
+| {date_format}   | the date formatted in MM-DD-YYYY format
+| {day_name}   | the current hour in 24 hour format (0-23)|
+| {month_name}   | the name of the current month
+| {month_day}   | the day of the month
+| {week_day_num}   | the day of the week (where 0 is sunday, 1 is monday, etc)|
+| {year}   | the current year
+
 To use any of these variables, put them into the text field in the JSON file and they will update with the clock. You can also mix any form of constant text with a variable (for example: "{temp_feel}F" could put out "42F". If you are not interested in using any variables, constant text will still work perfectly fine.
 
 There are multiple clock faces with different text, colors, and time periods in the default matrix_config.json, you can look to that for more examples.
