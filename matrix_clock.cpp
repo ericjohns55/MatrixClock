@@ -26,6 +26,9 @@ using namespace std;
 // boolean that checks if there is an interrupt pushed to the system
 volatile bool interrupt_received = false;
 
+// boolean that shows whether the user was alerted about an empty clock face or not
+bool warned_once = false;
+
 // load_clock_faces()
 //      this loads all the clock faces from the matrix_config.json in the repository
 //      you can edit matrix_config.json all you want, as long as valid json and data is submitted than it will load the
@@ -135,14 +138,9 @@ int main(int argc, char* argv[]) {
     // load initial clock face
     matrix_clock::clock_face* clock_face_pointer = get_clock_face(clock_faces, times[3], times[1]);
 
-    if (clock_face_pointer == nullptr) {    // invalid configuration file, all times are not covered
-        cerr << "Could not find a clock interface at the current time." << endl;
-        cerr << "Please check your configuration file to make sure all times of day are covered." << endl;
-        return EXIT_FAILURE;
-    } else {    // valid clock face and other data, go ahead and update then swap out the on screen and off-screen canvases
-        update_clock(offscreen, clock_face_pointer, &time_util);
-        offscreen = matrix->SwapOnVSync(offscreen);
-    }
+    // if we do not find a valid clock face for the given time, we will fill with an empty clock face to display nothing on the screen
+    update_clock(offscreen, clock_face_pointer, &time_util);
+    offscreen = matrix->SwapOnVSync(offscreen);
 
     // declare the previous second
     int previous_second = times[2];
@@ -164,11 +162,6 @@ int main(int argc, char* argv[]) {
 
             if (new_minute) // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
                 clock_face_pointer = get_clock_face(clock_faces, times[3], times[1]);
-
-            if (clock_face_pointer == nullptr) {    // same problem as before, there is not an interface for the current time so kill the program
-                cerr << "Could not find a clock interface at the current time.";
-                return EXIT_FAILURE;
-            }
 
             // otherwise, update every second if:
             //      1) we have a second count displayed on the screen that must update
@@ -207,7 +200,16 @@ matrix_clock::clock_face* get_clock_face(matrix_clock::clock_face_container cloc
         }
     }
 
-    return nullptr; // return nullptr if none found, configurations must cover all times of day
+    // tell the user one time if we could not find a defined clock face, this way we are not spamming console
+    if (!warned_once) {
+        cout << "Could not find a defined clock face at time " << hour << ":" << minute;
+        cout << ", displaying nothing until a new one is found." << endl;
+        cout << "To avoid using empty clock faces, make sure your time period's start and end times cover all times of day between your clock faces." << endl;
+        cout << "If you purposely left the clock face blank, you can ignore this message." << endl;
+        warned_once = true;
+    }
+
+    return clock_faces.get_empty(); // return empty clock face if not found, ideally defined clock faces cover all times of day
 }
 
 // this is where we load all the data from the json object (matrix_config.json is currently hardcoded, may change later)

@@ -296,9 +296,10 @@ namespace matrix_clock {
     class clock_face_container {
         private:
             std::vector<clock_face*> clock_faces;
+            clock_face* empty;
         public:
             // default constructor, instantiates an empty container
-            inline clock_face_container() { }
+            inline clock_face_container() { empty = new clock_face("~empty~"); }
 
             // add a new clock_face pointer to the container
             inline void add_clock_face(clock_face* new_clock_face) { clock_faces.push_back(new_clock_face); }
@@ -308,6 +309,9 @@ namespace matrix_clock {
 
             // get the clock face at position clock_face_num
             inline clock_face* get_clock_face(int clock_face_num) { return clock_faces.data()[clock_face_num]; }
+
+            // get an empty clock face in case a time is not declared
+            inline clock_face* get_empty(void) const { return empty; }
     };
 }
 

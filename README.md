@@ -89,7 +89,8 @@ We can break this down into a few simple ways:
 
 ### Time Periods
 Time periods is also an array with four arguments: start_hour, start_minute, end_hour, and end_minute. The hours must be in 24 hour format [0-23], and the minutes must be from [0-60] to function.
-Every time the clock updates, it will check to see if it hits a new start time for a clock face and swap over to it if necessary
+Every time the clock updates, it will check to see if it hits a new start time for a clock face and swap over to it if necessary.
+If the program does not find a clock face for a specific time, it will show a blank screen on the matrix and warn the user once via console output (you could use this to your advantage if you want to display a blank screen during a time period).
 
 ### Text Lines
 A text line represents a line of text visible on the matrix when the current clock face is active
