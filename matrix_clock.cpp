@@ -13,6 +13,7 @@
 #include <iostream>
 #include <fstream>
 #include <jsoncpp/json/json.h>
+
 #include "matrix_clock.h"
 
 #include "led-matrix.h"
@@ -69,14 +70,15 @@ void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* 
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 5) { // make sure the minimum amount of arguments were provided for the program to run
+    if (argc < 7) { // make sure the minimum amount of arguments were provided for the program to run
         cerr << "Only " << argc << " arguments provided:" << endl;
-        cerr << "Usage: " << argv[0] << " --WEATHER_URL <weather url> --CONFIG_FILE <config file location>" << endl;
+        cerr << "Usage: " << argv[0] << " --WEATHER_URL <weather url> --CONFIG_FILE <config file location> --TELEGRAM_API <bot api key>" << endl;
         return EXIT_FAILURE;
     }
 
     string config_file;     // we are going to load both the config file path and the weather url the command arguments
     string weather_url;
+    string api_key;
 
     for (int i = 1; i < argc; i++) {    // loop through all the given arguments
         if (string(argv[i]) == "--WEATHER_URL") {   // check if we found a weather URL specifier
@@ -90,6 +92,12 @@ int main(int argc, char* argv[]) {
                 config_file = argv[++i];
             } else {
                 cerr << "--CONFIG_FILE requires an argument" << endl;
+            }
+        } else if (string(argv[i]) == "--TELEGRAM_API") {
+            if (i + 1 < argc) {
+                api_key = argv[++i];
+            } else {
+                cerr << "--TELEGRAM_API requires an argument" << endl;
             }
         }
     }
@@ -135,11 +143,15 @@ int main(int argc, char* argv[]) {
     int times[4];           // declare a times array to frequently update
     time_util.get_time(times);
 
-    // load initial clock face
-    matrix_clock::clock_face* clock_face_pointer = get_clock_face(clock_faces, times[3], times[1]);
+    // load initial clock face by setting it to the current one in the container
+    clock_faces.set_current(get_clock_face(clock_faces, times[3], times[1]));
+
+    // load and enable telegram bot
+    matrix_clock::matrix_telegram test(&clock_faces, &time_util, api_key);
+    test.enable_bot();
 
     // if we do not find a valid clock face for the given time, we will fill with an empty clock face to display nothing on the screen
-    update_clock(offscreen, clock_face_pointer, &time_util);
+    update_clock(offscreen, clock_faces.get_current(), &time_util);
     offscreen = matrix->SwapOnVSync(offscreen);
 
     // declare the previous second
@@ -150,7 +162,9 @@ int main(int argc, char* argv[]) {
 
         int new_second = times[2];  // check the new second
 
-        if (previous_second != new_second) {    // only run the following code if the seconds have changed, otherwise sleep for 0.2 seconds
+        // only run the following code if the seconds have changed OR if a clock face has demanded an immediate update
+        // otherwise sleep for 0.2 seconds
+        if (previous_second != new_second) {
             bool new_minute = times[2] == 0;    // create boolean for if the minute changed
             previous_second = new_second;       // update previous second for next loop
 
@@ -160,16 +174,22 @@ int main(int argc, char* argv[]) {
             if (times[1] % 5 == 0 && new_minute)    // if the minute is a multiple of 5, update weather info (weather API has a free polling limit, so i only update once every 5 minutes)
                 time_util.poll_weather();
 
-            if (new_minute) // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
-                clock_face_pointer = get_clock_face(clock_faces, times[3], times[1]);
+            if (new_minute && !clock_faces.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
+                clock_faces.set_current(get_clock_face(clock_faces, times[3], times[1]));
+            }
 
-            // otherwise, update every second if:
-            //      1) we have a second count displayed on the screen that must update
+            // update only if:
+            //      1) we have a second count displayed on the screen that must update every second
             //      2) there is no second count, BUT it is a new minute so we have to update anyways
+            //      3) there is a forced update
             // do not update under ANY OTHER CIRCUMSTANCES
-            if (clock_face_pointer->contains_second_variable() || (!clock_face_pointer->contains_second_variable() && new_minute)) {
-                update_clock(offscreen, clock_face_pointer, &time_util);
+            // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
+            if (clock_faces.get_current()->contains_second_variable() || (!clock_faces.get_current()->contains_second_variable() && new_minute) || clock_faces.update_required()) {
+                update_clock(offscreen, clock_faces.get_current(), &time_util);
                 offscreen = matrix->SwapOnVSync(offscreen);
+
+                if (clock_faces.update_required())  // if there is a required update, set it to false so we do not force update again on new second
+                    clock_faces.set_update_required(false);
             }
         }
 

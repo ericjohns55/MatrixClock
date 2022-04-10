@@ -25,6 +25,7 @@ Night Time Clock Face
 - [rpi-rgb-led-matrix](https://github.com/hzeller/rpi-rgb-led-matrix)
 - [jsoncpp](https://github.com/open-source-parsers/jsoncpp)
 - [libcurl](https://curl.se/libcurl/)
+- [tgbot-cpp](https://github.com/reo7sp/tgbot-cpp/)
 
 ### Required Weather Portion:
 1) Generate an API key from [OpenWeatherMap](https://openweathermap.org/)
@@ -43,10 +44,11 @@ The program requires two arguments at runtime.
 --WEATHER_URL <weather_url> - The OpenWeatherAPI key used to pull weather from
 --CONFIG_FILE <config_file> - The JSON file that the clock faces will be read from
 							  I would utilize the "matrix_config.json" file inside this repository. 
+--TELEGRAM_API <api key> - The telegram API key for your telegram bot
 ```
 Full example:
 ```
-./matrix_clock --WEATHER_URL https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial --CONFIG_FILE matrix_config.json
+./matrix_clock --WEATHER_URL https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial --CONFIG_FILE matrix_config.json --API_KEY XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 If you want to add any other command line arguments embedded within the matrix display's library you can also add them before or after the required arguments.
 
