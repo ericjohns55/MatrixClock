@@ -27,9 +27,6 @@ using namespace std;
 // boolean that checks if there is an interrupt pushed to the system
 volatile bool interrupt_received = false;
 
-// boolean that shows whether the user was alerted about an empty clock face or not
-bool warned_once = false;
-
 // load_clock_faces()
 //      this loads all the clock faces from the matrix_config.json in the repository
 //      you can edit matrix_config.json all you want, as long as valid json and data is submitted than it will load the
@@ -37,12 +34,6 @@ bool warned_once = false;
 //      this MUST BE called before you attempt to write any data to the screen
 //      otherwise nothing will be loaded and there will be no information to grab for writing
 matrix_clock::clock_face_container load_clock_faces(string config_file);
-
-// get_clock_face(matrix_clock::clock_face_container clock_faces, int hour, int minute)
-//      this takes in a clock_face_container, the current hour, and current minute and grabs the clock face embedded within the current time
-//      if two time frames overlap, it will return whatever one is returned first in matrix_config.json
-//      the clock_face returned will have the current hour and minute within a time_period in the object
-matrix_clock::clock_face* get_clock_face(matrix_clock::clock_face_container clock_faces, int hour, int minute);
 
 // Control-C interrupt to kill the program
 static void InterruptHandler(int signal) {
@@ -144,7 +135,7 @@ int main(int argc, char* argv[]) {
     time_util.get_time(times);
 
     // load initial clock face by setting it to the current one in the container
-    clock_faces.set_current(get_clock_face(clock_faces, times[3], times[1]));
+    clock_faces.update_clock_face(times[3], times[1]);
 
     // load and enable telegram bot
     matrix_clock::matrix_telegram test(&clock_faces, &time_util, api_key);
@@ -175,7 +166,7 @@ int main(int argc, char* argv[]) {
                 time_util.poll_weather();
 
             if (new_minute && !clock_faces.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
-                clock_faces.set_current(get_clock_face(clock_faces, times[3], times[1]));
+                clock_faces.update_clock_face(times[3], times[1]);
             }
 
             // update only if:
@@ -185,11 +176,19 @@ int main(int argc, char* argv[]) {
             // do not update under ANY OTHER CIRCUMSTANCES
             // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
             if (clock_faces.get_current()->contains_second_variable() || (!clock_faces.get_current()->contains_second_variable() && new_minute) || clock_faces.update_required()) {
-                update_clock(offscreen, clock_faces.get_current(), &time_util);
-                offscreen = matrix->SwapOnVSync(offscreen);
+                if (clock_faces.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
+                    update_clock(offscreen, clock_faces.get_current(), &time_util); // update only if the clock is on
+                    offscreen = matrix->SwapOnVSync(offscreen);
+                }
 
-                if (clock_faces.update_required())  // if there is a required update, set it to false so we do not force update again on new second
+                if (clock_faces.update_required()) {  // if there is a required update, set it to false so we do not force update again on new second
                     clock_faces.set_update_required(false);
+
+                    if (!clock_faces.is_clock_on()) {   // clear the screen if it was just turned off
+                        offscreen->Clear();
+                        offscreen = matrix->SwapOnVSync(offscreen);
+                    }
+                }
             }
         }
 
@@ -202,34 +201,6 @@ int main(int argc, char* argv[]) {
     delete matrix;
 
     return EXIT_SUCCESS;
-}
-
-// this is where we get the current clock interface for the minute
-matrix_clock::clock_face* get_clock_face(matrix_clock::clock_face_container clock_faces, int hour, int minute) {
-    for (size_t index = 0; index < clock_faces.get_clock_face_count(); index++) {   // loop through all clock faces
-        // grab the time periods for the current time period
-        vector<matrix_clock::time_period> time_periods = clock_faces.get_clock_face(index)->get_time_periods();
-
-        // loop through all time periods (THERE CAN BE MORE THAN ONE)
-        for (size_t j = 0; j < time_periods.size(); j++) {
-            matrix_clock::time_period current_period = time_periods.data()[j];
-
-            if (current_period.in_time_period(hour, minute)) {  // check if the current time is within this time period, if so return this clock face
-                return clock_faces.get_clock_face(index);
-            }   // otherwise, loop again until we find it
-        }
-    }
-
-    // tell the user one time if we could not find a defined clock face, this way we are not spamming console
-    if (!warned_once) {
-        cout << "Could not find a defined clock face at time " << hour << ":" << minute;
-        cout << ", displaying nothing until a new one is found." << endl;
-        cout << "To avoid using empty clock faces, make sure your time period's start and end times cover all times of day between your clock faces." << endl;
-        cout << "If you purposely left the clock face blank, you can ignore this message." << endl;
-        warned_once = true;
-    }
-
-    return clock_faces.get_empty(); // return empty clock face if not found, ideally defined clock faces cover all times of day
 }
 
 // this is where we load all the data from the json object (matrix_config.json is currently hardcoded, may change later)

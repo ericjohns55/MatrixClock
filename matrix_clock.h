@@ -301,9 +301,10 @@ namespace matrix_clock {
             clock_face* empty;
             bool override_interface;
             bool force_update;
+            bool clock_on;
         public:
             // default constructor, instantiates an empty container
-            inline clock_face_container() { empty = new clock_face("~empty~"); override_interface = false; force_update = false;}
+            clock_face_container();
 
             // add a new clock_face pointer to the container
             inline void add_clock_face(clock_face* new_clock_face) { clock_faces.push_back(new_clock_face); }
@@ -311,28 +312,17 @@ namespace matrix_clock {
             // return the amount of clock faces in the container
             inline size_t get_clock_face_count(void) const { return clock_faces.size(); }
 
-            // get the clock face at position clock_face_num
-            inline clock_face* get_clock_face(int clock_face_num) { return clock_faces.data()[clock_face_num]; }
+            // get the names of all the clock faces as a string array
+            std::string* get_names(void) const;
 
-            // get the clock face with the specific name
-            inline clock_face* get_clock_face(std::string name) {
-                for (size_t i = 0; i < clock_faces.size(); i++) {      // loop through all clock faces
-                    if (!strcasecmp(clock_faces.data()[i]->get_name().c_str(), name.c_str())) {  // if we find one with a matching name, return it
-                        return clock_faces.data()[i];                                                 // use !strcasecmp because it returns 0 if they are equal
-                    }
-                }
+            // update the clock face to one with the given name
+            void update_clock_face(std::string name);
 
-                return empty;       // return empty if not found
-            }
+            // update the clock face in the given time
+            void update_clock_face(int hour, int minute);
 
             // get the current clock face
             inline clock_face* get_current(void) const { return current; }
-
-            // set the need for a forced clock face update
-            inline void set_current(clock_face* new_face) { current = new_face; }
-
-            // get an empty clock face in case a time is not declared
-            inline clock_face* get_empty(void) const { return empty; }
 
             // check whether the clock face is overridden via the telegram bot
             inline bool clock_face_overridden(void) const { return override_interface; }
@@ -340,11 +330,17 @@ namespace matrix_clock {
             // set whether the clock face is overridden
             inline void set_clock_face_override(bool override) { override_interface = override; }
 
-        // check if we need to force a clock face update
-        inline bool update_required(void) const { return force_update; }
+            // check if we need to force a clock face update
+            inline bool update_required(void) const { return force_update; }
 
-        // set the need for a forced clock face update
-        inline void set_update_required(bool required) { force_update = required; }
+            // set the need for a forced clock face update
+            inline void set_update_required(bool required) { force_update = required; }
+
+            // check if the clock is on or not
+            inline bool is_clock_on(void) const { return clock_on; }
+
+            // set the clock on (true) or off (false)
+            inline void set_clock_on(bool on) { clock_on = on; }
     };
 
     // matrix_telegram class

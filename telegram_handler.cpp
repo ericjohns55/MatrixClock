@@ -8,6 +8,7 @@
 
 #include <string>
 #include <thread>
+#include <sstream>
 #include <tgbot/tgbot.h>
 #include "matrix_clock.h"
 
@@ -20,13 +21,6 @@ namespace matrix_clock {
     //      container = the clock face container that contains all valid clock faces
     //      var_util = the var util used throughout the program to poll for new data
     void bot_handler(std::string api_key, matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util);
-
-    // get_names(matrix_clock::clock_face_container* container)
-    //      Returns an array of all the names of the clock faces in the configuration file
-    //          - the array length is equal to the clock faces count [container->get_clock_face_count()]
-    //      Formats them to be all lowercase except the first letter
-    std::string* get_names(matrix_clock::clock_face_container* container);
-
 
     matrix_telegram::matrix_telegram(matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util, std::string api) {
         clock_face_container = container;   // load required pointers and the API key for manipulation by the bot
@@ -42,12 +36,18 @@ namespace matrix_clock {
     void bot_handler(std::string api_key, matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util) {
         TgBot::Bot bot(api_key);    // create a new bot using the API Key
 
-        TgBot::InlineKeyboardMarkup::Ptr keyboard(new TgBot::InlineKeyboardMarkup); // the inline keyboard for the clock faces
+        TgBot::InlineKeyboardMarkup::Ptr clock_faces_keyboard(new TgBot::InlineKeyboardMarkup); // the inline clock_faces_keyboard for the clock faces
 
-        std::string* name_array = get_names(container); // grab the names of all the faces to load into the clock face
+        std::string* name_array = container->get_names(); // grab the names of all the faces to load into the clock face
 
-        // generate inline keyboard button command
-        bot.getEvents().onCommand("buttons", [&bot, &keyboard, &container, &name_array](TgBot::Message::Ptr message) {
+        // generate inline keyboards for the user
+        bot.getEvents().onCommand("buttons", [&bot, &clock_faces_keyboard, &container, &name_array](TgBot::Message::Ptr message) {
+            // delete the /buttons message (this is for cleanliness)
+            bot.getApi().deleteMessage(message->chat->id, message->messageId);
+
+            // GENERATING THREE INLINE KEYBOARDS:
+            // FIRST KEYBOARD: clock face override
+
             int length = container->get_clock_face_count(); // length of the clock faces container
 
             // this is the loop for the amount of rows we will have, three clock faces names allowed per row
@@ -64,50 +64,136 @@ namespace matrix_clock {
                     button->text = name_array[location];        // set the button text and callback data to the clock face name
                     button->callbackData = name_array[location];
 
-                    row.push_back(button);  // push thee button to the row
+                    row.push_back(button);  // push the button to the row
                 }
 
-                keyboard->inlineKeyboard.push_back(row);    // push the row to the keyboard
+                clock_faces_keyboard->inlineKeyboard.push_back(row);    // push the row to the clock face keyboard
             }
 
-            // send the keyboard to the user
-            bot.getApi().sendMessage(message->chat->id, "Clock Interfaces", false, 0, keyboard, "Markdown");
+            std::vector<TgBot::InlineKeyboardButton::Ptr> clear_row;  // row for the clear clock face override button
+
+            TgBot::InlineKeyboardButton::Ptr clear_button(new TgBot::InlineKeyboardButton);
+            clear_button->text = "Disable Clock Face Override";
+            clear_button->callbackData = "command_clear_override";
+
+            clear_row.push_back(clear_button);                  // push back the button to the row
+            clock_faces_keyboard->inlineKeyboard.push_back(clear_row);
+
+            // send the clock face keyboard to the user
+            bot.getApi().sendMessage(message->chat->id, "\U0001F553 Clock Interfaces \U0001F553", false, 0, clock_faces_keyboard, "Markdown");
+
+            // SECOND KEYBOARD: clock controls
+
+            TgBot::InlineKeyboardMarkup::Ptr clock_controls_keyboard(new TgBot::InlineKeyboardMarkup);
+            std::vector<TgBot::InlineKeyboardButton::Ptr> clock_controls_row1;
+            std::vector<TgBot::InlineKeyboardButton::Ptr> clock_controls_row2;
+
+            TgBot::InlineKeyboardButton::Ptr clock_on_button(new TgBot::InlineKeyboardButton);
+            clock_on_button->text = "Clock On";
+            clock_on_button->callbackData = "command_clock_on"; // everything that is not a clock face starts with command_ to differentiate
+            clock_controls_row1.push_back(clock_on_button);     // this helps avoid confusion because we do not know what the user may name the clock faces
+
+            TgBot::InlineKeyboardButton::Ptr clock_off_button(new TgBot::InlineKeyboardButton);
+            clock_off_button->text = "Clock Off";
+            clock_off_button->callbackData = "command_clock_off";
+            clock_controls_row1.push_back(clock_off_button);
+
+            TgBot::InlineKeyboardButton::Ptr force_weather_update(new TgBot::InlineKeyboardButton);
+            force_weather_update->text = "Update Weather";
+            force_weather_update->callbackData = "command_weather_update";
+            clock_controls_row2.push_back(force_weather_update);
+
+            TgBot::InlineKeyboardButton::Ptr force_date_update(new TgBot::InlineKeyboardButton);
+            force_date_update->text = "Update Date";
+            force_date_update->callbackData = "command_date_update";
+            clock_controls_row2.push_back(force_date_update);
+
+            clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row1);
+            clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row2);
+
+            bot.getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", false, 0, clock_controls_keyboard, "Markdown");
+
+            // THIRD KEYBOARD: system controls
+
+            TgBot::InlineKeyboardMarkup::Ptr system_controls_keyboard(new TgBot::InlineKeyboardMarkup);
+            std::vector<TgBot::InlineKeyboardButton::Ptr> system_row;
+
+            TgBot::InlineKeyboardButton::Ptr ping_button(new TgBot::InlineKeyboardButton);
+            ping_button->text = "Ping Clock";
+            ping_button->callbackData = "command_ping";
+            system_row.push_back(ping_button);
+
+            TgBot::InlineKeyboardButton::Ptr print_button(new TgBot::InlineKeyboardButton);
+            print_button->text = "Print Time/Weather Data";
+            print_button->callbackData = "command_print_data";
+            system_row.push_back(print_button);
+
+            system_controls_keyboard->inlineKeyboard.push_back(system_row);
+
+            bot.getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
         });
 
-        // callback query to the inline keyboard
-        bot.getEvents().onCallbackQuery([&container](TgBot::CallbackQuery::Ptr query) {
+        // callback query to the inline clock_faces_keyboard
+        bot.getEvents().onCallbackQuery([&bot, &container, &var_util](TgBot::CallbackQuery::Ptr query) {
             if (!StringTools::startsWith(query->data, "command")) { // make sure it doesnt start with command, there are other buttons
-                container->set_current(container->get_clock_face(query->data)); // set the current clock face to the name pressed
+                container->update_clock_face(query->data); // set the current clock face to the name pressed
                 container->set_clock_face_override(true);       // set the clock face override on, this way it will stay and not change with time
                 container->set_update_required(true);       // force clock update now
             } else {
-                // TODO: commands
+                if (query->data == "command_clear_override") {
+                    int times[4];
+                    var_util->get_time(times);
+
+                    container->update_clock_face(times[3], times[1]);   // update the clock face to the one it should be at the current time
+                    container->set_update_required(true);                   // force update
+                    container->set_clock_face_override(false);              // turn off clock face override
+                } else if (query->data == "command_clock_on") {
+                    container->set_clock_on(true);              // turn the clock on and force update
+                    container->set_update_required(true);
+                } else if (query->data == "command_clock_off") {
+                    container->set_clock_on(false);             // turn clock off and force update so it goes to black
+                    container->set_update_required(true);
+                } else if (query->data == "command_weather_update") {
+                    var_util->poll_weather();                   // refresh weather and force update
+                    container->set_update_required(true);
+                } else if (query->data == "command_date_update") {
+                    var_util->poll_date();
+                    container->set_update_required(true);
+                } else if (query->data == "command_ping") {
+                    bot.getApi().sendMessage(query->message->chat->id, "Bot is working correctly!");
+                } else if (query->data == "command_print_data") {
+                    int times[4];
+                    var_util->get_time(times);
+
+                    // build the string so we only print out one message
+                    std::stringstream stream;
+
+                    // print out the date
+                    stream << "Today is " << var_util->get_day_name() << ", " << var_util->get_month_name() << " ";
+                    stream << var_util->get_day_of_month() << ", " << var_util->get_year() << std::endl;
+
+                    // print out the time
+                    stream << "It is currently " << times[0] << ":";
+                    stream << (times[1] < 10 ? "0" : "") << times[1];
+                    stream << (times[3] < 12 ? "am" : "pm") << std::endl << std::endl;
+
+                    // print out the weather
+                    stream << "Today's weather forecast: " << var_util->get_forecast() << std::endl;
+                    stream << "It is currently " << var_util->get_temp() << "F (" << var_util->get_real_feel() << "F real feel) ";
+                    stream << "with a humidity of " << var_util->get_humidity() << "%" << std::endl;
+                    stream << "The days low is " << var_util->get_temp_low() << "F and the high is " << var_util->get_temp_high() << "F." << std::endl;
+                    stream << "The wind is currently blowing at " << var_util->get_wind_speed() << "mph" << std::endl;
+
+                    // send the build stream to the user
+                    bot.getApi().sendMessage(query->message->chat->id, stream.str());
+                }
             }
         });
 
         TgBot::TgLongPoll long_poll(bot); // this starts the poll
 
-        while (true) {      // loop forever (this runs again on loop)
+        while (true) {      // loop forever (this runs again on callback; dont worry this is on a separate thread from main)
             long_poll.start();  // run the poll again after next data
         }
-    }
-
-    std::string* get_names(matrix_clock::clock_face_container* container) {
-        std::string* names_array = new std::string[container->get_clock_face_count()];  // create a new array with a length of the clock face count
-
-        for (size_t i = 0; i < container->get_clock_face_count(); i++) {    // iterate through each clock face
-            std::string name = container->get_clock_face(i)->get_name();    // grab the name of the clock face
-
-            for (size_t j = 0; j < name.size(); j++) {  // iterate through each character
-                if (j == 0)
-                    name[j] = toupper(name[j]); // make the first one upper case
-                else
-                    name[j] = tolower(name[j]); // make every other one lower case
-            }
-
-            names_array[i] = name;
-        }
-
-        return names_array;
     }
 }

@@ -1,5 +1,5 @@
 CXXFLAGS=-Wall -O3 -g
-OBJECTS=matrix_clock.cpp matrix_clock.h matrix_color.cpp matrix_font.cpp text_line.cpp time_period.cpp variable_utility.cpp telegram_handler.cpp
+OBJECTS=matrix_clock.cpp matrix_clock.h matrix_color.cpp matrix_font.cpp text_line.cpp time_period.cpp variable_utility.cpp telegram_handler.cpp clock_face_container.cpp
 BINARIES=matrix_clock
 
 RGB_INCDIR=../include
