@@ -1,3 +1,4 @@
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -146,3 +147,34 @@ To use any of these variables, put them into the text field in the JSON file and
 There are multiple clock faces with different text, colors, and time periods in the default matrix_config.json, you can look to that for more examples.
 
 After changing the configuration file, restart the program and it will immediately grab the data from it, no rebuilding the project necessary.
+
+## Telegram Integration
+The program includes telegram bot integration that allows you to (optionally) control functions of your clock from your phone using inline keyboard buttons. This lets you turn the screen on and off, or manually switch to a different clock face without necessarily being in that time frame.
+
+You will have to create your own telegram bot using the [BotFather](https://core.telegram.org/bots#6-botfather) then use the API key it generates for you in the command line arguments for this program. 
+
+Once the bot is up and running, use the */buttons* command to generate the button controls for the clock.
+
+An example of what the telegram interface looks like is below:
+
+<img src="images/telegram.png" width="400" height="600">
+
+### What each button does:
+**Clock Interfaces**: The three example buttons "Day", "Dusk", and "Night" represent the three default clock faces that are included in matrix_config.json. If you rename or configure different clock faces in your version of the clock then run the /buttons command, then this will swap those names out with your clock faces.
+
+*Note: if you add or remove new clock faces after running the /buttons command, then you will have to run the /buttons command again to make sure they change*
+
+**Disable Clock Face Override**: If you click on one of the clock faces, then it will stop manually swapping over to other clock faces at their start time until you click this button. This button sets it back to what would be the current clock face, and restarts the process to manually swap over at start times.
+
+**Clock On/Off**: Turns the clock display screen on or off
+
+**Update Weather**: If for some reason you want to update the weather manually instead of the default 5 minutes, this will update it on the screen
+
+**Update Date**: Manually update the date in case it did not change somehow (this should not be a problem)
+
+**Reload Config File**: If you made changes to a clock face in the configuration file, this allows you to reload it into the application without having to reboot the whole program
+
+**Ping Clock**: This returns a message saying the bot works if it is online.
+
+**Print Environment Data**: This sends all the time and weather information that could be displayed on the screen to your phone.
+
