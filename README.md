@@ -178,3 +178,7 @@ An example of what the telegram interface looks like is below:
 
 **Print Environment Data**: This sends all the time and weather information that could be displayed on the screen to your phone.
 
+## Todo List
+**Scheduled Texts for Environment Information**: Configure a time in the config file to send a text to the user including weather information. Maybe also configure the message that is sent and make separate days and times it can be sent at.
+
+**Background Color/Images**: Allow the user to do a 64x64 background image or background color for each clock face.
