@@ -11,8 +11,6 @@
 #include <thread>
 #include <signal.h>
 #include <iostream>
-#include <fstream>
-#include <jsoncpp/json/json.h>
 
 #include "matrix_clock.h"
 
@@ -26,14 +24,6 @@ using namespace std;
 
 // boolean that checks if there is an interrupt pushed to the system
 volatile bool interrupt_received = false;
-
-// load_clock_faces()
-//      this loads all the clock faces from the matrix_config.json in the repository
-//      you can edit matrix_config.json all you want, as long as valid json and data is submitted than it will load the
-//      program using that data and update everything when needed
-//      this MUST BE called before you attempt to write any data to the screen
-//      otherwise nothing will be loaded and there will be no information to grab for writing
-matrix_clock::clock_face_container load_clock_faces(string config_file);
 
 // Control-C interrupt to kill the program
 static void InterruptHandler(int signal) {
@@ -119,10 +109,11 @@ int main(int argc, char* argv[]) {
 
     rgb_matrix::FrameCanvas* offscreen = matrix->CreateFrameCanvas();   // create an offscreen canvas
 
-    matrix_clock::clock_face_container clock_faces = load_clock_faces(config_file);    // load the clock faces from json
+    matrix_clock::clock_face_container clock_faces(config_file);    // create clock face container and load data from the config file
+    clock_faces.load_clock_faces();
 
     if (clock_faces.get_clock_face_count() == 0) {  // check if none loaded
-        cerr << "Invalid configuration file" << endl;   // kill the program because we cannot have 0 interfaces
+        cerr << "Invalid configuration file provided." << endl;   // kill the program because we cannot have 0 interfaces
         return EXIT_FAILURE;
     }
 
@@ -156,39 +147,44 @@ int main(int argc, char* argv[]) {
         // only run the following code if the seconds have changed OR if a clock face has demanded an immediate update
         // otherwise sleep for 0.2 seconds
         if (previous_second != new_second) {
-            bool new_minute = times[2] == 0;    // create boolean for if the minute changed
-            previous_second = new_second;       // update previous second for next loop
+            if (!clock_faces.check_recent_reload()) {   // we want to skip an extra second if the config was recently reloaded, more information in header file
+                bool new_minute = times[2] == 0;    // create boolean for if the minute changed
+                previous_second = new_second;       // update previous second for next loop
 
-            if (time_util.is_new_day())         // if the day has changed, poll the new date data
-                time_util.poll_date();
+                if (time_util.is_new_day())         // if the day has changed, poll the new date data
+                    time_util.poll_date();
 
-            if (times[1] % 5 == 0 && new_minute)    // if the minute is a multiple of 5, update weather info (weather API has a free polling limit, so i only update once every 5 minutes)
-                time_util.poll_weather();
+                if (times[1] % 5 == 0 && new_minute)    // if the minute is a multiple of 5, update weather info (weather API has a free polling limit, so i only update once every 5 minutes)
+                    time_util.poll_weather();
 
-            if (new_minute && !clock_faces.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
-                clock_faces.update_clock_face(times[3], times[1]);
-            }
-
-            // update only if:
-            //      1) we have a second count displayed on the screen that must update every second
-            //      2) there is no second count, BUT it is a new minute so we have to update anyways
-            //      3) there is a forced update
-            // do not update under ANY OTHER CIRCUMSTANCES
-            // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
-            if (clock_faces.get_current()->contains_second_variable() || (!clock_faces.get_current()->contains_second_variable() && new_minute) || clock_faces.update_required()) {
-                if (clock_faces.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
-                    update_clock(offscreen, clock_faces.get_current(), &time_util); // update only if the clock is on
-                    offscreen = matrix->SwapOnVSync(offscreen);
+                if (new_minute && !clock_faces.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
+                    clock_faces.update_clock_face(times[3], times[1]);
                 }
 
-                if (clock_faces.update_required()) {  // if there is a required update, set it to false so we do not force update again on new second
-                    clock_faces.set_update_required(false);
-
-                    if (!clock_faces.is_clock_on()) {   // clear the screen if it was just turned off
-                        offscreen->Clear();
+                // update only if:
+                //      1) we have a second count displayed on the screen that must update every second
+                //      2) there is no second count, BUT it is a new minute so we have to update anyways
+                //      3) there is a forced update
+                // do not update under ANY OTHER CIRCUMSTANCES
+                // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
+                if (clock_faces.get_current()->contains_second_variable() || (!clock_faces.get_current()->contains_second_variable() && new_minute) || clock_faces.update_required()) {
+                    if (clock_faces.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
+                        update_clock(offscreen, clock_faces.get_current(), &time_util); // update only if the clock is on
                         offscreen = matrix->SwapOnVSync(offscreen);
                     }
+
+                    if (clock_faces.update_required()) {  // if there is a required update, set it to false so we do not force update again on new second
+                        clock_faces.set_update_required(false);
+
+                        if (!clock_faces.is_clock_on()) {   // clear the screen if it was just turned off
+                            offscreen->Clear();
+                            offscreen = matrix->SwapOnVSync(offscreen);
+                        }
+                    }
                 }
+            } else {
+                clock_faces.set_recent_reload(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
+                clock_faces.update_clock_face(times[3], times[1]);
             }
         }
 
@@ -202,71 +198,3 @@ int main(int argc, char* argv[]) {
 
     return EXIT_SUCCESS;
 }
-
-// this is where we load all the data from the json object (matrix_config.json is currently hardcoded, may change later)
-// matrix_config.json should be in the same folder as the executable, when you clone the git repository this should already be satisfied
-matrix_clock::clock_face_container load_clock_faces(string config_file) {
-    Json::Value jsonData;   // full json from the config file
-    JSONCPP_STRING error;
-    ifstream file_stream(config_file); // grab the matrix_config file
-
-    Json::CharReaderBuilder builder;    // json value reader
-
-    if (!parseFromStream(builder, file_stream, &jsonData, &error)) {
-        cout << "Invalid config file provided." << endl << error << endl;   // if we could not load data, tell the user its invalid
-    }                                                                       // the main method will kill the program if the clock face container is empty
-
-    file_stream.close();
-
-    matrix_clock::clock_face_container container;   // create the container and begin loading data
-
-    for (Json::Value::ArrayIndex face_index = 0; face_index != jsonData["clock_faces"].size(); face_index++) {  // loop through ALL clock face declared in the file
-        matrix_clock::clock_face *config_clock_face = new matrix_clock::clock_face(jsonData["clock_faces"][face_index]["name"].asString()); // create a new clock face at the current index
-
-        // loop through ALL time periods within the current interface
-        for (Json::Value::ArrayIndex times_index = 0; times_index != jsonData["clock_faces"][face_index]["time_periods"].size(); times_index++) {
-            Json::Value time_data = jsonData["clock_faces"][face_index]["time_periods"][times_index];
-
-            matrix_clock::time_period clock_face_time_period(time_data["start_hour"].asInt(),   // instantiate an object using json data
-                                                             time_data["start_minute"].asInt(),
-                                                             time_data["end_hour"].asInt(),
-                                                             time_data["end_minute"].asInt());
-
-            config_clock_face->add_time_period(clock_face_time_period); // add the time frame to the clock face object
-        }
-
-        // now we are going to loop through all text lines
-        for (Json::Value::ArrayIndex text_index = 0; text_index != jsonData["clock_faces"][face_index]["text_lines"].size(); text_index++) {
-            Json::Value text_data = jsonData["clock_faces"][face_index]["text_lines"][text_index];
-
-            matrix_clock::matrix_color color;       // variables that will need to be filled
-            matrix_clock::matrix_font font_size;
-            int x_pos, y_pos;
-            std::string text;
-
-            if (text_data["color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
-                color = matrix_clock::matrix_color(text_data["color"]["r"].asInt(),
-                                                   text_data["color"]["g"].asInt(),
-                                                   text_data["color"]["b"].asInt());
-            } else {                                                            // a prebuilt color is used, read it in from string
-                color = matrix_clock::matrix_color(text_data["color"]["built_in_color"].asString());
-            }
-
-            font_size = matrix_clock::font::font_from_string(text_data["font_size"].asString());    // grab font size, positioning, and text
-            x_pos = text_data["x_position"].asInt();
-            y_pos = text_data["y_position"].asInt();
-            text = text_data["text"].asString();
-
-            if (text.find("{second}") != std::string::npos)         // if there is a second in the variables, let the clock face know
-                config_clock_face->set_contains_second_variable(true);      // in this scenario we need to update the screen secondly instead of minutely
-
-            matrix_clock::text_line clock_face_text_line(color, font_size, x_pos, y_pos, text); // instantiate the text line object
-
-            config_clock_face->add_text(clock_face_text_line);      // add the text line to the current clock face
-        }
-
-        container.add_clock_face(config_clock_face);        // add the clock face to the container
-    }
-
-    return container;       // return our container of clock faces loaded from json for use in the main loop
-}                           // if it ends up being empty from a defective config file, the main loop checks it

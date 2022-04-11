@@ -80,13 +80,14 @@ namespace matrix_clock {
             clock_faces_keyboard->inlineKeyboard.push_back(clear_row);
 
             // send the clock face keyboard to the user
-            bot.getApi().sendMessage(message->chat->id, "\U0001F553 Clock Interfaces \U0001F553", false, 0, clock_faces_keyboard, "Markdown");
+            bot.getApi().sendMessage(message->chat->id, "\U0001F553 Clock Faces \U0001F553", false, 0, clock_faces_keyboard, "Markdown");
 
             // SECOND KEYBOARD: clock controls
 
             TgBot::InlineKeyboardMarkup::Ptr clock_controls_keyboard(new TgBot::InlineKeyboardMarkup);
             std::vector<TgBot::InlineKeyboardButton::Ptr> clock_controls_row1;
             std::vector<TgBot::InlineKeyboardButton::Ptr> clock_controls_row2;
+            std::vector<TgBot::InlineKeyboardButton::Ptr> clock_controls_row3;
 
             TgBot::InlineKeyboardButton::Ptr clock_on_button(new TgBot::InlineKeyboardButton);
             clock_on_button->text = "Clock On";
@@ -108,27 +109,35 @@ namespace matrix_clock {
             force_date_update->callbackData = "command_date_update";
             clock_controls_row2.push_back(force_date_update);
 
+            TgBot::InlineKeyboardButton::Ptr reload_clock_faces(new TgBot::InlineKeyboardButton);
+            reload_clock_faces->text = "Reload Config File";
+            reload_clock_faces->callbackData = "command_reload_config";
+            clock_controls_row3.push_back(reload_clock_faces);
+
             clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row1);
             clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row2);
+            clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row3);
 
             bot.getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", false, 0, clock_controls_keyboard, "Markdown");
 
             // THIRD KEYBOARD: system controls
 
             TgBot::InlineKeyboardMarkup::Ptr system_controls_keyboard(new TgBot::InlineKeyboardMarkup);
-            std::vector<TgBot::InlineKeyboardButton::Ptr> system_row;
+            std::vector<TgBot::InlineKeyboardButton::Ptr> ping_row;
+            std::vector<TgBot::InlineKeyboardButton::Ptr> data_row;
 
             TgBot::InlineKeyboardButton::Ptr ping_button(new TgBot::InlineKeyboardButton);
             ping_button->text = "Ping Clock";
             ping_button->callbackData = "command_ping";
-            system_row.push_back(ping_button);
+            ping_row.push_back(ping_button);
 
             TgBot::InlineKeyboardButton::Ptr print_button(new TgBot::InlineKeyboardButton);
-            print_button->text = "Print Time/Weather Data";
+            print_button->text = "Environment Data";
             print_button->callbackData = "command_print_data";
-            system_row.push_back(print_button);
+            data_row.push_back(print_button);
 
-            system_controls_keyboard->inlineKeyboard.push_back(system_row);
+            system_controls_keyboard->inlineKeyboard.push_back(ping_row);
+            system_controls_keyboard->inlineKeyboard.push_back(data_row);
 
             bot.getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
         });
@@ -161,6 +170,10 @@ namespace matrix_clock {
                     container->set_update_required(true);
                 } else if (query->data == "command_ping") {
                     bot.getApi().sendMessage(query->message->chat->id, "Bot is working correctly!");
+                } else if (query->data == "command_reload_config") {
+                    container->set_recent_reload(true); // set recent reload so we skip an update second
+                    container->load_clock_faces();
+                    container->set_update_required(true);       // force update
                 } else if (query->data == "command_print_data") {
                     int times[4];
                     var_util->get_time(times);

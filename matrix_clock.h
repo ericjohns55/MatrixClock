@@ -299,12 +299,14 @@ namespace matrix_clock {
             std::vector<clock_face*> clock_faces;
             clock_face* current;
             clock_face* empty;
+            std::string config_file;
+            bool config_recently_reloaded;
             bool override_interface;
             bool force_update;
             bool clock_on;
         public:
             // default constructor, instantiates an empty container
-            clock_face_container();
+            clock_face_container(std::string config_file);
 
             // add a new clock_face pointer to the container
             inline void add_clock_face(clock_face* new_clock_face) { clock_faces.push_back(new_clock_face); }
@@ -320,6 +322,13 @@ namespace matrix_clock {
 
             // update the clock face in the given time
             void update_clock_face(int hour, int minute);
+
+            //this loads all the clock faces from the matrix_config.json in the repository
+            //you can edit matrix_config.json all you want, as long as valid json and data is submitted than it will load the
+            //program using that data and update everything when needed
+            //this MUST BE called before you attempt to write any data to the screen
+            //otherwise nothing will be loaded and there will be no information to grab for writing
+            void load_clock_faces();
 
             // get the current clock face
             inline clock_face* get_current(void) const { return current; }
@@ -341,6 +350,16 @@ namespace matrix_clock {
 
             // set the clock on (true) or off (false)
             inline void set_clock_on(bool on) { clock_on = on; }
+
+            // check whether the config was recently reloaded
+            // we want to check this because the telegram bot runs on a separate thread so it is possible
+            // that a natural update could run while we are clearing it
+            // in this scenario we want to make sure it is not in the process of being reloaded while we are accessesing
+            // data because it could potentially become null halfway through updating
+            inline bool check_recent_reload(void) const { return config_recently_reloaded; }
+
+            // check whether the config was recently reloaded
+            inline void set_recent_reload(bool reloaded)  { config_recently_reloaded = reloaded; }
     };
 
     // matrix_telegram class
