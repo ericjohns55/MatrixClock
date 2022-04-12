@@ -181,4 +181,4 @@ An example of what the telegram interface looks like is below:
 ## Todo List
 **Scheduled Texts for Environment Information**: Configure a time in the config file to send a text to the user including weather information. Maybe also configure the message that is sent and make separate days and times it can be sent at.
 
-**Background Color/Images**: Allow the user to do a 64x64 background image or background color for each clock face.
+**Background Color/Images**: Allow the user to do a background color for each clock face (default black).
