@@ -113,10 +113,14 @@ int main(int argc, char* argv[]) {
     rgb_matrix::FrameCanvas* offscreen = matrix->CreateFrameCanvas();   // create an offscreen canvas
 
     matrix_clock::matrix_data clock_faces(config_file);    // create clock face container and load data from the config file
-    clock_faces.load_clock_faces();
+
+    if (!clock_faces.load_clock_faces()) {
+        cerr << "Killing program, please enter valid JSON data into " << config_file << " and run again." << endl;
+        return EXIT_FAILURE;
+    }
 
     if (clock_faces.get_clock_face_count() == 0) {  // check if none loaded
-        cerr << "Invalid configuration file provided." << endl;   // kill the program because we cannot have 0 interfaces
+        cerr << "No valid clock faces found. Make sure at least one clock face is defined in " << config_file << endl;   // kill the program because we cannot have 0 interfaces
         return EXIT_FAILURE;
     }
 

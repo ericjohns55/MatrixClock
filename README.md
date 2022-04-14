@@ -165,7 +165,7 @@ Once the bot is up and running, use the */buttons* command to generate the butto
 
 An example of what the telegram interface looks like is below:
 
-<img src="images/telegram.png" width="400" height="600">
+<img src="images/telegram.png" width="400" height="584">
 
 ### What each button does:
 **Clock Interfaces**: The three example buttons "Day", "Dusk", and "Night" represent the three default clock faces that are included in matrix_config.json. If you rename or configure different clock faces in your version of the clock then run the /buttons command, then this will swap those names out with your clock faces.
@@ -183,6 +183,8 @@ An example of what the telegram interface looks like is below:
 **Reload Config File**: If you made changes to a clock face in the configuration file, this allows you to reload it into the application without having to reboot the whole program
 
 **Ping Clock**: This returns a message saying the bot works if it is online.
+
+**Chat ID**: This prints out the chat ID for the telegram bot. This will be used in matrix_config.json if you want to setup scheduled texts with weather data (coming soon).
 
 **Print Environment Data**: This sends all the time and weather information that could be displayed on the screen to your phone.
 

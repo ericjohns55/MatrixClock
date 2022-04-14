@@ -325,7 +325,7 @@ namespace matrix_clock {
             //program using that data and update everything when needed
             //this MUST BE called before you attempt to write any data to the screen
             //otherwise nothing will be loaded and there will be no information to grab for writing
-            void load_clock_faces();
+            bool load_clock_faces();
 
             // get the current clock face
             inline clock_face* get_current(void) const { return current; }

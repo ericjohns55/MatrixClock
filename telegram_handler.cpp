@@ -180,9 +180,9 @@ namespace matrix_clock {
                     container->load_clock_faces();
                     container->set_update_required(true);       // force update
                 } else if (query->data == "command_chatid") {
-                    std::string id = "Chat ID: ";
-                    id += query->message->chat->id;
-                    bot.getApi().sendMessage(query->message->chat->id, id);
+                    std::stringstream stream;
+                    stream << "Chat ID: " << query->message->chat->id;
+                    bot.getApi().sendMessage(query->message->chat->id, stream.str());
                 } else if (query->data == "command_print_data") {
                     int times[4];
                     var_util->get_time(times);

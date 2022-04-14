@@ -69,7 +69,7 @@ namespace matrix_clock {
         return names_array;
     }
 
-    void matrix_data::load_clock_faces() {
+    bool matrix_data::load_clock_faces() {
         // clear the current clock faces if they exist
 
         for (matrix_clock::clock_face* current_face : clock_faces) {    // delete all old clock faces
@@ -82,88 +82,96 @@ namespace matrix_clock {
 
         // LOADING NEW DATA BELOW
 
-        Json::Value jsonData;   // full json from the config file
-        JSONCPP_STRING error;
-        std::ifstream file_stream(config_file); // grab the matrix_config file
+        try {   // attempt to load data
+            Json::Value jsonData;   // full json from the config file
+            JSONCPP_STRING error;
+            std::ifstream file_stream(config_file); // grab the matrix_config file
 
-        Json::CharReaderBuilder builder;    // json value reader
+            Json::CharReaderBuilder builder;    // json value reader
 
-        if (!parseFromStream(builder, file_stream, &jsonData, &error)) {
-            file_stream.close();    // close file
-            return;     // if the config file could not be parsed, return and the main program will kill the application
-        }
-
-        file_stream.close();    // file is valid and data has been loaded, close the file and begin parsing
-
-        for (Json::Value::ArrayIndex face_index = 0; face_index != jsonData["clock_faces"].size(); face_index++) {  // loop through ALL clock face declared in the file
-            Json::Value clock_face_data = jsonData["clock_faces"][face_index];
-            std::string name = clock_face_data["name"].asString();
-
-            matrix_clock::matrix_color bg_color;
-
-            if (clock_face_data["bg_color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
-                int red = clock_face_data["bg_color"]["r"].asInt();
-                int green = clock_face_data["bg_color"]["g"].asInt();
-                int blue = clock_face_data["bg_color"]["b"].asInt();
-
-                bg_color = matrix_clock::matrix_color(red, green, blue);
-            } else {                                                            // a prebuilt color is used, read it in from string
-                std::string prebuilt_color_name = clock_face_data["bg_color"]["built_in_color"].asString();
-                bg_color = matrix_clock::matrix_color(prebuilt_color_name);
+            if (!parseFromStream(builder, file_stream, &jsonData, &error)) {
+                file_stream.close();    // close file
+                std::cerr << "Invalid JSON file provided." << std::endl;
+                return false;           // if the config file could not be parsed, return and the main program will kill the application
             }
 
-            // create a new clock face at the current index with the given name and background color
-            matrix_clock::clock_face* config_clock_face = new matrix_clock::clock_face(name, bg_color);
+            file_stream.close();    // file is valid and data has been loaded, close the file and begin parsing
 
-            // loop through ALL time periods within the current interface
-            for (Json::Value::ArrayIndex times_index = 0; times_index != clock_face_data["time_periods"].size(); times_index++) {
-                Json::Value time_data = clock_face_data["time_periods"][times_index];
+            for (Json::Value::ArrayIndex face_index = 0; face_index != jsonData["clock_faces"].size(); face_index++) {  // loop through ALL clock face declared in the file
+                Json::Value clock_face_data = jsonData["clock_faces"][face_index];
+                std::string name = clock_face_data["name"].asString();
 
-                int start_hour = time_data["start_hour"].asInt();       // grab fields from the time periods section of the clock face
-                int start_minute = time_data["start_minute"].asInt();
-                int end_hour = time_data["end_hour"].asInt();
-                int end_minute = time_data["end_minute"].asInt();
+                matrix_clock::matrix_color bg_color;
 
-                // instantiate a new time period and add it to the clock face
-                matrix_clock::time_period clock_face_time_period(start_hour, start_minute, end_hour, end_minute);
+                if (clock_face_data["bg_color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
+                    int red = clock_face_data["bg_color"]["r"].asInt();
+                    int green = clock_face_data["bg_color"]["g"].asInt();
+                    int blue = clock_face_data["bg_color"]["b"].asInt();
 
-                config_clock_face->add_time_period(clock_face_time_period); // add the time frame to the clock face object
-            }
-
-            // now we are going to loop through all text lines
-            for (Json::Value::ArrayIndex text_index = 0; text_index != clock_face_data["text_lines"].size(); text_index++) {
-                Json::Value text_data = clock_face_data["text_lines"][text_index];
-
-                matrix_clock::matrix_color color;       // variables that will need to be filled
-                matrix_clock::matrix_font font_size;
-                int x_pos, y_pos;
-                std::string text;
-
-                if (text_data["color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
-                    int red = text_data["color"]["r"].asInt();
-                    int green = text_data["color"]["g"].asInt();
-                    int blue = text_data["color"]["b"].asInt();
-
-                    color = matrix_clock::matrix_color(red, green, blue);
+                    bg_color = matrix_clock::matrix_color(red, green, blue);
                 } else {                                                            // a prebuilt color is used, read it in from string
-                    std::string prebuilt_color_name = text_data["color"]["built_in_color"].asString();
-                    color = matrix_clock::matrix_color(prebuilt_color_name);
+                    std::string prebuilt_color_name = clock_face_data["bg_color"]["built_in_color"].asString();
+                    bg_color = matrix_clock::matrix_color(prebuilt_color_name);
                 }
 
-                font_size = matrix_clock::font::font_from_string(text_data["font_size"].asString());    // grab font size, positioning, and text
-                x_pos = text_data["x_position"].asInt();
-                y_pos = text_data["y_position"].asInt();
-                text = text_data["text"].asString();
+                // create a new clock face at the current index with the given name and background color
+                matrix_clock::clock_face* config_clock_face = new matrix_clock::clock_face(name, bg_color);
 
-                if (text.find("{second}") != std::string::npos)         // if there is a second in the variables, let the clock face know
-                    config_clock_face->set_contains_second_variable(true);      // in this scenario we need to update the screen secondly instead of minutely
+                // loop through ALL time periods within the current interface
+                for (Json::Value::ArrayIndex times_index = 0; times_index != clock_face_data["time_periods"].size(); times_index++) {
+                    Json::Value time_data = clock_face_data["time_periods"][times_index];
 
-                matrix_clock::text_line clock_face_text_line(color, font_size, x_pos, y_pos, text); // instantiate the text line object
+                    int start_hour = time_data["start_hour"].asInt();       // grab fields from the time periods section of the clock face
+                    int start_minute = time_data["start_minute"].asInt();
+                    int end_hour = time_data["end_hour"].asInt();
+                    int end_minute = time_data["end_minute"].asInt();
 
-                config_clock_face->add_text(clock_face_text_line);      // add the text line to the current clock face
+                    // instantiate a new time period and add it to the clock face
+                    matrix_clock::time_period clock_face_time_period(start_hour, start_minute, end_hour, end_minute);
+
+                    config_clock_face->add_time_period(clock_face_time_period); // add the time frame to the clock face object
+                }
+
+                // now we are going to loop through all text lines
+                for (Json::Value::ArrayIndex text_index = 0; text_index != clock_face_data["text_lines"].size(); text_index++) {
+                    Json::Value text_data = clock_face_data["text_lines"][text_index];
+
+                    matrix_clock::matrix_color color;       // variables that will need to be filled
+                    matrix_clock::matrix_font font_size;
+                    int x_pos, y_pos;
+                    std::string text;
+
+                    if (text_data["color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
+                        int red = text_data["color"]["r"].asInt();
+                        int green = text_data["color"]["g"].asInt();
+                        int blue = text_data["color"]["b"].asInt();
+
+                        color = matrix_clock::matrix_color(red, green, blue);
+                    } else {                                                            // a prebuilt color is used, read it in from string
+                        std::string prebuilt_color_name = text_data["color"]["built_in_color"].asString();
+                        color = matrix_clock::matrix_color(prebuilt_color_name);
+                    }
+
+                    font_size = matrix_clock::font::font_from_string(text_data["font_size"].asString());    // grab font size, positioning, and text
+                    x_pos = text_data["x_position"].asInt();
+                    y_pos = text_data["y_position"].asInt();
+                    text = text_data["text"].asString();
+
+                    if (text.find("{second}") != std::string::npos)         // if there is a second in the variables, let the clock face know
+                        config_clock_face->set_contains_second_variable(true);      // in this scenario we need to update the screen secondly instead of minutely
+
+                    matrix_clock::text_line clock_face_text_line(color, font_size, x_pos, y_pos, text); // instantiate the text line object
+
+                    config_clock_face->add_text(clock_face_text_line);      // add the text line to the current clock face
+                }
+
+                add_clock_face(config_clock_face);        // add the clock face to the container
             }
 
-            add_clock_face(config_clock_face);        // add the clock face to the container
+            return true;        // Return true because we successfully parsed the file
+        } catch (const Json::Exception& exception) {    // if data could not be loaded, return false so main kills the program - we need valid data to be able to load the clock faces
+            std::cerr << "Could not parse JSON values: " << exception.what() << std::endl;  // print out the error to help the user find their error
+            return false;
         }
     }
 }
