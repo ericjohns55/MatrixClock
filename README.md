@@ -60,6 +60,12 @@ The following is the default night time clock face in the program.
   "clock_faces": [
     {
       "name": "night",
+      "bg_color": {
+        "built_in_color": "black",
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
       "time_periods": [
         {
           "start_hour": 2,
@@ -92,6 +98,10 @@ We can break this down into a few simple ways:
 ### Clock faces:
 "clock_faces" is an array in which you will store all your clock faces. To add a clock face to the program just add a comma after the current one and declare a new one in the same format. To remove one, simply delete the block.
 **NOTE:** There must be at least one clock face for the program to run
+
+The clock face must have a declared name. This is the name that will be used within the telegram bot when you generate the inline keyboard.
+
+The clock face must also have a defined background color. I recommend filling in "black" under the "built_in_color" field, though you can set it to "none" and fill in the rgb values as you wish. I go more into detail about the colors field under the "Text Lines" header.
 
 ### Time Periods
 Time periods is also an array with four arguments: start_hour, start_minute, end_hour, and end_minute. The hours must be in 24 hour format [0-23], and the minutes must be from [0-60] to function.
@@ -130,8 +140,6 @@ Here is a list of the current variables:
 | {ampm}   | prints out am if it is before noon, pm if not
 | {temp}   |the current temperature outside
 | {temp_feel}   | the real feel outside|
-| {temp_low}   | the low temperature for the day|
-| {temp_high}   | the high temperature for the day|
 | {humidity}   | the humidity outside|
 | {forecast}   | the forecast outside (NOTE: this is typically too long to fit on the screen)|
 | {forecast_short}   | a one word description of the weather outside (this can always fit on a screen)|

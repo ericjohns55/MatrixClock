@@ -37,6 +37,9 @@ static void InterruptHandler(int signal) {
 void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* clock_face, matrix_clock::variable_utility* util) {
     offscreen->Clear(); // clear offscreen because it was previously swapped
 
+    matrix_clock::matrix_color bg_color = clock_face->get_background_color();
+    offscreen->Fill(bg_color.get_red(), bg_color.get_green(), bg_color.get_blue());
+
     for (int i = 0; i < clock_face->get_line_count(); i++) {    // loop through all lines to render
         matrix_clock::text_line current_line = clock_face->get_line(i);  // grab current line from the clock face
         current_line.parse_variables(util);     // parse the variables into actual data
@@ -109,7 +112,7 @@ int main(int argc, char* argv[]) {
 
     rgb_matrix::FrameCanvas* offscreen = matrix->CreateFrameCanvas();   // create an offscreen canvas
 
-    matrix_clock::clock_face_container clock_faces(config_file);    // create clock face container and load data from the config file
+    matrix_clock::matrix_data clock_faces(config_file);    // create clock face container and load data from the config file
     clock_faces.load_clock_faces();
 
     if (clock_faces.get_clock_face_count() == 0) {  // check if none loaded

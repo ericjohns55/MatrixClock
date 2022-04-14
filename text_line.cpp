@@ -74,8 +74,6 @@ namespace matrix_clock {
         replace_string(parsed_text, "{ampm}", times[3] < 12 ? "am" : "pm");
         replace_string(parsed_text, "{temp}", std::to_string(util->get_temp()));
         replace_string(parsed_text, "{temp_feel}", std::to_string(util->get_real_feel()));
-        replace_string(parsed_text, "{temp_low}", std::to_string(util->get_temp_low()));
-        replace_string(parsed_text, "{temp_high}", std::to_string(util->get_temp_high()));
         replace_string(parsed_text, "{humidity}", std::to_string(util->get_humidity()));
         replace_string(parsed_text, "{forecast}", util->get_forecast());
         replace_string(parsed_text, "{forecast_short}", util->get_forecast_short());

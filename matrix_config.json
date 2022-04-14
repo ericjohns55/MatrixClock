@@ -2,6 +2,12 @@
   "clock_faces": [
     {
       "name": "day",
+      "bg_color": {
+        "built_in_color": "black",
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
       "time_periods": [
         {
           "start_hour": 9,
@@ -87,12 +93,18 @@
     },
     {
       "name": "dusk",
+      "bg_color": {
+        "built_in_color": "black",
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
       "time_periods": [
         {
           "start_hour": 23,
           "start_minute": 0,
           "end_hour": 2,
-          "end_minute": 00
+          "end_minute": 0
         },
         {
           "start_hour": 8,
@@ -178,6 +190,12 @@
     },
     {
       "name": "night",
+      "bg_color": {
+        "built_in_color": "black",
+        "r": 0,
+        "g": 0,
+        "b": 0
+      },
       "time_periods": [
         {
           "start_hour": 2,

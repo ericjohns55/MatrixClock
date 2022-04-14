@@ -13,27 +13,27 @@
 #include "matrix_clock.h"
 
 namespace matrix_clock {
-    // bot_handler(std::string api_key, matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util);
+    // bot_handler(std::string api_key, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util);
     //      Contains all the commands and callback functions for the bot
     //      Has the /buttons command to generate the Inline Keyboard, and the callback function for the button presses
     //
     //      api_key = the api key for the telegram bot (required to run)
     //      container = the clock face container that contains all valid clock faces
     //      var_util = the var util used throughout the program to poll for new data
-    void bot_handler(std::string api_key, matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util);
+    void bot_handler(std::string api_key, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util);
 
-    matrix_telegram::matrix_telegram(matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util, std::string api) {
-        clock_face_container = container;   // load required pointers and the API key for manipulation by the bot
+    matrix_telegram::matrix_telegram(matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util, std::string api) {
+        matrixData = container;   // load required pointers and the API key for manipulation by the bot
         util = var_util;
         api_key = api;
     }
 
     void matrix_telegram::enable_bot() {
-        std::thread poll_bot(bot_handler, api_key, clock_face_container, util); // starts the bot in a separate thread
+        std::thread poll_bot(bot_handler, api_key, matrixData, util); // starts the bot in a separate thread
         poll_bot.detach();  // detach so the thread does not die when we leave the method scope
     }
 
-    void bot_handler(std::string api_key, matrix_clock::clock_face_container* container, matrix_clock::variable_utility* var_util) {
+    void bot_handler(std::string api_key, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util) {
         TgBot::Bot bot(api_key);    // create a new bot using the API Key
 
         TgBot::InlineKeyboardMarkup::Ptr clock_faces_keyboard(new TgBot::InlineKeyboardMarkup); // the inline clock_faces_keyboard for the clock faces
@@ -123,20 +123,25 @@ namespace matrix_clock {
             // THIRD KEYBOARD: system controls
 
             TgBot::InlineKeyboardMarkup::Ptr system_controls_keyboard(new TgBot::InlineKeyboardMarkup);
-            std::vector<TgBot::InlineKeyboardButton::Ptr> ping_row;
+            std::vector<TgBot::InlineKeyboardButton::Ptr> system_row;
             std::vector<TgBot::InlineKeyboardButton::Ptr> data_row;
 
             TgBot::InlineKeyboardButton::Ptr ping_button(new TgBot::InlineKeyboardButton);
             ping_button->text = "Ping Clock";
             ping_button->callbackData = "command_ping";
-            ping_row.push_back(ping_button);
+            system_row.push_back(ping_button);
+
+            TgBot::InlineKeyboardButton::Ptr chat_id_button(new TgBot::InlineKeyboardButton);
+            chat_id_button->text = "Chat ID";
+            chat_id_button->callbackData = "command_chatid";
+            system_row.push_back(chat_id_button);
 
             TgBot::InlineKeyboardButton::Ptr print_button(new TgBot::InlineKeyboardButton);
             print_button->text = "Environment Data";
             print_button->callbackData = "command_print_data";
             data_row.push_back(print_button);
 
-            system_controls_keyboard->inlineKeyboard.push_back(ping_row);
+            system_controls_keyboard->inlineKeyboard.push_back(system_row);
             system_controls_keyboard->inlineKeyboard.push_back(data_row);
 
             bot.getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
@@ -174,6 +179,10 @@ namespace matrix_clock {
                     container->set_recent_reload(true); // set recent reload so we skip an update second
                     container->load_clock_faces();
                     container->set_update_required(true);       // force update
+                } else if (query->data == "command_chatid") {
+                    std::string id = "Chat ID: ";
+                    id += query->message->chat->id;
+                    bot.getApi().sendMessage(query->message->chat->id, id);
                 } else if (query->data == "command_print_data") {
                     int times[4];
                     var_util->get_time(times);
@@ -194,7 +203,6 @@ namespace matrix_clock {
                     stream << "Today's weather forecast: " << var_util->get_forecast() << std::endl;
                     stream << "It is currently " << var_util->get_temp() << "F (" << var_util->get_real_feel() << "F real feel) ";
                     stream << "with a humidity of " << var_util->get_humidity() << "%" << std::endl;
-                    stream << "The days low is " << var_util->get_temp_low() << "F and the high is " << var_util->get_temp_high() << "F." << std::endl;
                     stream << "The wind is currently blowing at " << var_util->get_wind_speed() << "mph" << std::endl;
 
                     // send the build stream to the user

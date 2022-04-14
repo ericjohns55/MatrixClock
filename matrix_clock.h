@@ -102,7 +102,7 @@ namespace matrix_clock {
     class variable_utility {
         private:
             std::string weather_url;
-            int temp, real_feel, high, low, humidity;
+            int temp, real_feel, humidity;
             float wind_speed;
             std::string short_forecast, forecast;
             std::string formatted_date, month_name, day_name;
@@ -144,14 +144,6 @@ namespace matrix_clock {
             // returns the current real feel
             //      poll_weather() must be called before this is usable
             inline int get_real_feel(void) const { return real_feel; }
-
-            // returns the day's low temperature
-            //      poll_weather() must be called before this is usable
-            inline int get_temp_low(void) const { return low; }
-
-            // returns the day's high temperature
-            //      poll_weather() must be called before this is usable
-            inline int get_temp_high(void) const { return high; }
 
             // returns the current humidity
             //      poll_weather() must be called before this is usable
@@ -253,12 +245,14 @@ namespace matrix_clock {
     class clock_face {
         private:
             std::string name;
+            matrix_color background_color;
             std::vector<text_line> text_lines;
             std::vector<time_period> time_periods;
             bool contains_seconds_code;
         public:
             // instantiates a clock face with a specified name
-            inline clock_face(std::string name) { this->name = name; contains_seconds_code = false; }
+            inline clock_face(std::string name, matrix_color bg_color) { this->name = name; contains_seconds_code = false;
+                background_color = bg_color; }
 
             // adds a time period to the clock face
             // (a clock face can contain many time periods)
@@ -281,6 +275,9 @@ namespace matrix_clock {
             // this will be relevant more later when telegram bot implementation is added
             inline std::string get_name(void) const { return name; }
 
+            // get the background color of the clock face
+            inline matrix_color get_background_color(void) const { return background_color; }
+
             // set if the clock face contains a {second} variable or not
             // description of why this is important under contains_second_variable()
             inline void set_contains_second_variable(bool contained) { contains_seconds_code = contained; }
@@ -292,9 +289,9 @@ namespace matrix_clock {
             inline bool contains_second_variable(void) const { return contains_seconds_code; }
     };
 
-    // clock_face_container class
+    // matrix_data class
     //      Represents a container of clock faces to hold everything needed for the matrix
-    class clock_face_container {
+    class matrix_data {
         private:
             std::vector<clock_face*> clock_faces;
             clock_face* current;
@@ -306,7 +303,7 @@ namespace matrix_clock {
             bool clock_on;
         public:
             // default constructor, instantiates an empty container
-            clock_face_container(std::string config_file);
+            matrix_data(std::string config_file);
 
             // add a new clock_face pointer to the container
             inline void add_clock_face(clock_face* new_clock_face) { clock_faces.push_back(new_clock_face); }
@@ -367,12 +364,12 @@ namespace matrix_clock {
     //      More information about what the telegram bot does in the README file in this repository
     class matrix_telegram {
         private:
-            matrix_clock::clock_face_container* clock_face_container;
+            matrix_clock::matrix_data* matrixData;
             matrix_clock::variable_utility* util;
             std::string api_key;
         public:
             // default constructor, pulls in the clock container and variable utility for use in the bot, and the API key
-            matrix_telegram(matrix_clock::clock_face_container*, matrix_clock::variable_utility*, std::string);
+            matrix_telegram(matrix_clock::matrix_data*, matrix_clock::variable_utility*, std::string);
 
             // enables the callback for the telegram bot, it will not run unless this is called
             void enable_bot();

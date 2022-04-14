@@ -48,8 +48,6 @@ namespace matrix_clock {
                 short_forecast = jsonData["weather"][0]["main"].asString();
                 temp = round(jsonData["main"]["temp"].asFloat());
                 real_feel = round(jsonData["main"]["feels_like"].asFloat());
-                high = round(jsonData["main"]["temp_max"].asFloat());
-                low = round(jsonData["main"]["temp_min"].asFloat());
                 wind_speed = round(jsonData["wind"]["speed"].asFloat() * 10) / 10.0;
                 humidity = round(jsonData["main"]["humidity"].asFloat());
 
