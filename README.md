@@ -159,7 +159,7 @@ After changing the configuration file, restart the program and it will immediate
 ## Telegram Integration
 The program includes telegram bot integration that allows you to (optionally) control functions of your clock from your phone using inline keyboard buttons. This lets you turn the screen on and off, or manually switch to a different clock face without necessarily being in that time frame.
 
-You will have to create your own telegram bot using the [BotFather](https://core.telegram.org/bots#6-botfather) then use the API key it generates for you in the command line arguments for this program. 
+You will have to create your own telegram bot using the [BotFather](https://core.telegram.org/bots#6-botfather) then use the API key (or token) it generates for you in the command line arguments for this program. 
 
 Once the bot is up and running, use the */buttons* command to generate the button controls for the clock.
 
@@ -186,3 +186,7 @@ An example of what the telegram interface looks like is below:
 
 **Print Environment Data**: This sends all the time and weather information that could be displayed on the screen to your phone.
 
+## Todo List
+**Scheduled Texts for Environment Information**: Configure a time in the config file to send a text to the user including weather information. Maybe also configure the message that is sent and make separate days and times it can be sent at.
+
+**Background Color/Images**: Allow the user to do a background color for each clock face (default black).
