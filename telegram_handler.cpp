@@ -213,8 +213,18 @@ namespace matrix_clock {
 
         TgBot::TgLongPoll long_poll(bot); // this starts the poll
 
+        bool warn_once = true;
+
         while (true) {      // loop forever (this runs again on callback; dont worry this is on a separate thread from main)
-            long_poll.start();  // run the poll again after next data
+            try {
+                long_poll.start();  // run the poll again after next data
+            } catch (std::exception& e) {       // this is in case network drops, prevents crashes on unstable networks
+                if (warn_once) {
+                    std::cout << e.what() << std::endl;
+                    std::cout << "Could not update telegram bot. Service will resume once a new connection is found." << std::endl;
+                    warn_once = false;
+                }
+            }
         }
     }
 }

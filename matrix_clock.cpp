@@ -143,6 +143,9 @@ int main(int argc, char* argv[]) {
     update_clock(offscreen, clock_faces.get_current(), &time_util);
     offscreen = matrix->SwapOnVSync(offscreen);
 
+    // inform console we are starting so there is at least some feedback in console
+    cout << "Starting clock loop..." << endl;
+
     // declare the previous second
     int previous_second = times[2];
 
