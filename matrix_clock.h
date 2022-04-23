@@ -13,6 +13,7 @@
 #include <vector>
 #include <ctime>
 #include <cstring>
+#include <algorithm>
 #include "graphics.h"
 
 namespace matrix_clock {
@@ -126,6 +127,9 @@ namespace matrix_clock {
 
             // polls the system for new date information and updates the date field with the new data
             void poll_date(void);
+
+            // replace all valid variables in the string parameter into a new string and return it
+            std::string parse_variables(std::string vars);
 
             // returns true if the time is exactly midnight (and on the first second), false if not
             bool is_new_day(void);
@@ -290,16 +294,41 @@ namespace matrix_clock {
             inline bool contains_second_variable(void) const { return contains_seconds_code; }
     };
 
+    // telegram_push class
+    //      Represents the data that would be used for a scheduled push notification
+    class telegram_push {
+    private:
+        std::string message;
+        int hour, minute;
+        std::vector<int> days;
+    public:
+        // default constructor, takes in all data for the field variables (it is assumed this will be used while parsing the config json file)
+        telegram_push(std::string message, int hour, int minute, std::vector<int> days) {
+            this->message = message;        this->hour = hour;      this->minute = minute;      this->days = days;
+        }
+
+        // checks if it is time to send a push notification, returns true if so
+        // if hour is -1, we consider it hourly and this is acceptable
+        inline bool is_push_time(int current_hour, int current_minute, int day_of_week) {
+            return (current_hour == hour || hour == -1) && current_minute == minute && std::find(days.begin(), days.end(), day_of_week) != days.end();
+        }
+
+        // grab the message for the notification
+        inline std::string get_message(void) const { return message; }
+    };
+
     // matrix_data class
     //      Represents a container of clock faces to hold everything needed for the matrix
     class matrix_data {
         private:
             std::vector<clock_face*> clock_faces;
+            std::vector<telegram_push*> push_notifications;
             clock_face* current;
             clock_face* empty;
             std::string config_file;
             std::string weather_url;
             std::string bot_token;
+            std::int64_t bot_chat_id;
             bool config_recently_reloaded;
             bool override_interface;
             bool force_update;
@@ -310,6 +339,9 @@ namespace matrix_clock {
 
             // add a new clock_face pointer to the container
             inline void add_clock_face(clock_face* new_clock_face) { clock_faces.push_back(new_clock_face); }
+
+            // add a new push notification pointer to the container
+            inline void add_notification(telegram_push* notification) { push_notifications.push_back(notification); }
 
             // return the amount of clock faces in the container
             inline size_t get_clock_face_count(void) const { return clock_faces.size(); }
@@ -341,6 +373,13 @@ namespace matrix_clock {
             // Note: you MUST run load_clock_data() before this is valid
             inline std::string get_bot_token(void) const { return bot_token; }
 
+            // get the defined chat id
+            // Note: you MUST run load_clock_data() before this is valid
+            inline std::int64_t get_chat_id(void) const { return bot_chat_id; }
+
+            // get the telegram push notifications vector
+            inline std::vector<telegram_push*> get_notifications(void) const { return push_notifications; }
+
             // check whether the clock face is overridden via the telegram bot
             inline bool clock_face_overridden(void) const { return override_interface; }
 
@@ -368,22 +407,6 @@ namespace matrix_clock {
 
             // check whether the config was recently reloaded
             inline void set_recent_reload(bool reloaded)  { config_recently_reloaded = reloaded; }
-    };
-
-    // matrix_telegram class
-    //      Launches the telegram integration of the bot
-    //      More information about what the telegram bot does in the README file in this repository
-    class matrix_telegram {
-        private:
-            matrix_clock::matrix_data* matrixData;
-            matrix_clock::variable_utility* util;
-            std::string api_key;
-        public:
-            // default constructor, pulls in the clock container and variable utility for use in the bot, and the API key
-            matrix_telegram(matrix_clock::matrix_data*, matrix_clock::variable_utility*, std::string);
-
-            // enables the callback for the telegram bot, it will not run unless this is called
-            void enable_bot();
     };
 }
 

@@ -7,8 +7,8 @@
 //
 
 #include <iostream>
-#include <jsoncpp/json/json.h>
 #include <fstream>
+#include <jsoncpp/json/json.h>
 #include "matrix_clock.h"
 
 namespace matrix_clock {
@@ -78,6 +78,12 @@ namespace matrix_clock {
 
         clock_faces.clear();    // ensure it is empty
 
+        for (telegram_push* current_push : push_notifications) {        // do the same thing with push notifications
+            delete current_push;
+        }
+
+        push_notifications.clear();
+
         current = empty;        // set the current clock face to the empty one temporarily so it is never null
 
         // LOADING NEW DATA BELOW
@@ -105,6 +111,10 @@ namespace matrix_clock {
 
             // grab bot token from config file
             bot_token = clock_data["bot_token"].asString();
+
+            // grab telegram chat ID for the bot from config file
+            // the user can find this by clicking on "Chat ID" in the inline keyboard menu within the bot
+            bot_chat_id = clock_data["chat_id"].asInt();
 
             for (Json::Value::ArrayIndex face_index = 0; face_index != jsonData["clock_faces"].size(); face_index++) {  // loop through ALL clock face declared in the file
                 Json::Value clock_face_data = jsonData["clock_faces"][face_index];
@@ -175,6 +185,25 @@ namespace matrix_clock {
                 }
 
                 add_clock_face(config_clock_face);        // add the clock face to the container
+            }
+
+            // now we are going to read the telegram notifications box from the config file
+            Json::Value notifications = jsonData["telegram_notifications"];
+
+            for (Json::Value::ArrayIndex noti_index = 0; noti_index != notifications.size(); noti_index++) {
+                std::string message = notifications[noti_index]["message"].asString();  // read the message, hour, and minute
+                int hour = notifications[noti_index]["hour"].asInt();
+                int minute = notifications[noti_index]["minute"].asInt();
+
+                std::vector<int> days;
+
+                // loop through the days of the week array and add it to the vector
+                for (Json::Value::ArrayIndex days_index = 0; days_index != notifications[noti_index]["days_of_week"].size(); days_index++) {
+                    days.push_back(notifications[noti_index]["days_of_week"][days_index].asInt());
+                }
+
+                telegram_push* push_notification = new telegram_push(message, hour, minute, days);
+                add_notification(push_notification);        // create the new object and push back
             }
 
             return true;        // Return true because we successfully parsed the file

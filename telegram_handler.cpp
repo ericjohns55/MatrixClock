@@ -9,10 +9,9 @@
 #include <string>
 #include <thread>
 #include <sstream>
-#include <tgbot/tgbot.h>
-#include "matrix_clock.h"
+#include "matrix_telegram.h"
 
-namespace matrix_clock {
+namespace matrix_telegram_integration {
     // bot_handler(std::string api_key, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util);
     //      Contains all the commands and callback functions for the bot
     //      Has the /buttons command to generate the Inline Keyboard, and the callback function for the button presses
@@ -20,30 +19,44 @@ namespace matrix_clock {
     //      api_key = the api key for the telegram bot (required to run)
     //      container = the clock face container that contains all valid clock faces
     //      var_util = the var util used throughout the program to poll for new data
-    void bot_handler(std::string api_key, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util);
+    void bot_handler(TgBot::Bot* bot, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util);
 
-    matrix_telegram::matrix_telegram(matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util, std::string api) {
-        matrixData = container;   // load required pointers and the API key for manipulation by the bot
+    matrix_telegram::matrix_telegram(matrix_clock::matrix_data* data, matrix_clock::variable_utility* var_util) {
+        matrixData = data;   // load required pointers and the API key for manipulation by the bot
         util = var_util;
-        api_key = api;
+        api_key = matrixData->get_bot_token();
+        chat_id = matrixData->get_chat_id();
+        bot = new TgBot::Bot(api_key);  // create bot object
     }
 
     void matrix_telegram::enable_bot() {
-        std::thread poll_bot(bot_handler, api_key, matrixData, util); // starts the bot in a separate thread
+        std::thread poll_bot(bot_handler, bot, matrixData, util); // starts the bot in a separate thread
         poll_bot.detach();  // detach so the thread does not die when we leave the method scope
     }
 
-    void bot_handler(std::string api_key, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util) {
-        TgBot::Bot bot(api_key);    // create a new bot using the API Key
+    void matrix_telegram::check_send_notifications(int hour, int minute, int day_of_week) {
+        std::vector<matrix_clock::telegram_push*> notifications = matrixData->get_notifications();
+        std::vector<matrix_clock::telegram_push*>::iterator iter;
 
+        for (iter = notifications.begin(); iter != notifications.end(); iter++) {
+            matrix_clock::telegram_push* current_notification = *iter;
+
+            if (current_notification->is_push_time(hour, minute, day_of_week)) {
+                std::string parsed_message = util->parse_variables(current_notification->get_message());
+                bot->getApi().sendMessage(chat_id, parsed_message);
+            }
+        }
+    }
+
+    void bot_handler(TgBot::Bot* bot, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util) {
         TgBot::InlineKeyboardMarkup::Ptr clock_faces_keyboard(new TgBot::InlineKeyboardMarkup); // the inline clock_faces_keyboard for the clock faces
 
         std::string* name_array = container->get_names(); // grab the names of all the faces to load into the clock face
 
         // generate inline keyboards for the user
-        bot.getEvents().onCommand("buttons", [&bot, &clock_faces_keyboard, &container, &name_array](TgBot::Message::Ptr message) {
+        bot->getEvents().onCommand("buttons", [&bot, &clock_faces_keyboard, &container, &name_array](TgBot::Message::Ptr message) {
             // delete the /buttons message (this is for cleanliness)
-            bot.getApi().deleteMessage(message->chat->id, message->messageId);
+            bot->getApi().deleteMessage(message->chat->id, message->messageId);
 
             // GENERATING THREE INLINE KEYBOARDS:
             // FIRST KEYBOARD: clock face override
@@ -80,7 +93,7 @@ namespace matrix_clock {
             clock_faces_keyboard->inlineKeyboard.push_back(clear_row);
 
             // send the clock face keyboard to the user
-            bot.getApi().sendMessage(message->chat->id, "\U0001F553 Clock Faces \U0001F553", false, 0, clock_faces_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0001F553 Clock Faces \U0001F553", false, 0, clock_faces_keyboard, "Markdown");
 
             // SECOND KEYBOARD: clock controls
 
@@ -118,7 +131,7 @@ namespace matrix_clock {
             clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row2);
             clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row3);
 
-            bot.getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", false, 0, clock_controls_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", false, 0, clock_controls_keyboard, "Markdown");
 
             // THIRD KEYBOARD: system controls
 
@@ -144,11 +157,11 @@ namespace matrix_clock {
             system_controls_keyboard->inlineKeyboard.push_back(system_row);
             system_controls_keyboard->inlineKeyboard.push_back(data_row);
 
-            bot.getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
         });
 
         // callback query to the inline clock_faces_keyboard
-        bot.getEvents().onCallbackQuery([&bot, &container, &var_util](TgBot::CallbackQuery::Ptr query) {
+        bot->getEvents().onCallbackQuery([&bot, &container, &var_util](TgBot::CallbackQuery::Ptr query) {
             if (!StringTools::startsWith(query->data, "command")) { // make sure it doesnt start with command, there are other buttons
                 container->update_clock_face(query->data); // set the current clock face to the name pressed
                 container->set_clock_face_override(true);       // set the clock face override on, this way it will stay and not change with time
@@ -174,7 +187,7 @@ namespace matrix_clock {
                     var_util->poll_date();
                     container->set_update_required(true);
                 } else if (query->data == "command_ping") {
-                    bot.getApi().sendMessage(query->message->chat->id, "Bot is working correctly!");
+                    bot->getApi().sendMessage(query->message->chat->id, "Bot is working correctly!");
                 } else if (query->data == "command_reload_config") {
                     container->set_recent_reload(true); // set recent reload so we skip an update second
                     container->load_clock_data();
@@ -184,7 +197,7 @@ namespace matrix_clock {
                 } else if (query->data == "command_chatid") {
                     std::stringstream stream;
                     stream << "Chat ID: " << query->message->chat->id;
-                    bot.getApi().sendMessage(query->message->chat->id, stream.str());
+                    bot->getApi().sendMessage(query->message->chat->id, stream.str());
                 } else if (query->data == "command_print_data") {
                     int times[4];
                     var_util->get_time(times);
@@ -213,12 +226,12 @@ namespace matrix_clock {
                     }
 
                     // send the build stream to the user
-                    bot.getApi().sendMessage(query->message->chat->id, stream.str());
+                    bot->getApi().sendMessage(query->message->chat->id, stream.str());
                 }
             }
         });
 
-        TgBot::TgLongPoll long_poll(bot); // this starts the poll
+        TgBot::TgLongPoll long_poll(*bot); // this starts the poll
 
         bool warn_once = true;
 

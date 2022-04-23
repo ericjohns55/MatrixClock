@@ -13,7 +13,7 @@
 #include <iostream>
 
 #include "matrix_clock.h"
-
+#include "matrix_telegram.h"
 #include "led-matrix.h"
 #include "graphics.h"
 
@@ -121,10 +121,11 @@ int main(int argc, char* argv[]) {
     // load initial clock face by setting it to the current one in the container
     clock_data.update_clock_face(times[3], times[1]);
 
-    // only load the telegram bot if a valid key is entered
+    matrix_telegram_integration::matrix_telegram telegram_bot(&clock_data, &time_util);
+
+    // only enable the telegram bot if a valid key is entered
     // otherwise the user SHOULD put in disabled as instructed in the repo
     if (clock_data.get_bot_token() != "disabled") {
-        matrix_clock::matrix_telegram telegram_bot(&clock_data, &time_util, clock_data.get_bot_token());
         telegram_bot.enable_bot();
     }
 
@@ -150,14 +151,18 @@ int main(int argc, char* argv[]) {
                 bool new_minute = times[2] == 0;    // create boolean for if the minute changed
                 previous_second = new_second;       // update previous second for next loop
 
-                if (time_util.is_new_day())         // if the day has changed, poll the new date data
-                    time_util.poll_date();
+                if (new_minute) {            // specific tasks that happen every minute
+                    if (time_util.is_new_day())     // if the day has changed, poll the new date data (date cannot change on a second)
+                        time_util.poll_date();
 
-                if (times[1] % 5 == 0 && new_minute)    // if the minute is a multiple of 5, update weather info (weather API has a free polling limit, so i only update once every 5 minutes)
-                    time_util.poll_weather();
+                    if (times[1] % 5 == 0)   // if the minute is a multiple of 5, update weather info (weather API has a free polling limit, so i only update once every 5 minutes)
+                        time_util.poll_weather();
 
-                if (new_minute && !clock_data.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
-                    clock_data.update_clock_face(times[3], times[1]);
+                    if (!clock_data.clock_face_overridden())   // grab the interface again in case it changed as long as the face is not currently overridden (interfaces cannot change on a second)
+                        clock_data.update_clock_face(times[3], times[1]);
+
+                    if (clock_data.get_bot_token() != "disabled")   // as long as the bot is active, check to see if we need to send a push notification and do so if one is found
+                        telegram_bot.check_send_notifications(times[3], times[1], time_util.get_day_of_week());
                 }
 
                 // update only if:

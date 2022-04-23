@@ -7,16 +7,32 @@
 //
 
 #include <ctime>
-#include <sstream>
 #include <cmath>
 #include <memory>
+#include <sstream>
 #include <curl/curl.h>
 #include <jsoncpp/json/json.h>
 #include <iostream>
 #include "matrix_clock.h"
 
 namespace matrix_clock {
-    std::size_t callback(const char*, std::size_t, std::size_t, std::string*);  // callback method for curl command
+    // callback method for curl command
+    std::size_t callback(const char*, std::size_t, std::size_t, std::string*);
+
+    // replace_string(std::string& source, std::string search, std::string replace)
+    //      replace all instances of "search" in the source string with "replace"
+    //
+    //      source = the string to execute a replace on
+    //      search = the string we want to have replaced
+    //      replace = what we want to the search term with
+    void replace_string(std::string& source, std::string search, std::string replace);
+
+    // pad_numbers(int source)
+    //      pad the source number to be two digits with a leading 0
+    //      this exists mostly for standard readability of the minutes for the clock
+    //
+    //      source = the integer to add a leading 0 in front of (if necessary, if the source is greater than 10 than it does nothing but convert to string)
+    std::string pad_numbers(int source);
 
     void variable_utility::poll_weather() {
         CURL* curl = curl_easy_init();  // initialize curl
@@ -84,6 +100,39 @@ namespace matrix_clock {
         formatted_date = sstream.str();
     }
 
+    std::string variable_utility::parse_variables(std::string vars) {
+        std::string parsed_text(vars);
+
+        int times[4];       // load times from data object
+        get_time(times);
+
+        // perform text replacements using the parsed text field and defined variables
+        // fix formatting where necessary (padding 0s and converting time to am or pm)
+        replace_string(parsed_text, "{hour}", std::to_string(times[0]));
+        replace_string(parsed_text, "{minute}", pad_numbers(times[1]));
+        replace_string(parsed_text, "{second}", pad_numbers(times[2]));
+        replace_string(parsed_text, "{hour24}", std::to_string(times[3]));
+        replace_string(parsed_text, "{ampm}", times[3] < 12 ? "am" : "pm");
+        replace_string(parsed_text, "{temp}", std::to_string(get_temp()));
+        replace_string(parsed_text, "{temp_feel}", std::to_string(get_real_feel()));
+        replace_string(parsed_text, "{humidity}", std::to_string(get_humidity()));
+        replace_string(parsed_text, "{forecast}", get_forecast());
+        replace_string(parsed_text, "{forecast_short}", get_forecast_short());
+        replace_string(parsed_text, "{date_format}", get_formatted_date());
+        replace_string(parsed_text, "{month_name}", get_month_name());
+        replace_string(parsed_text, "{day_name}", get_day_name());
+        replace_string(parsed_text, "{month_num}", std::to_string(get_month_num()));
+        replace_string(parsed_text, "{month_day}", std::to_string(get_day_of_month()));
+        replace_string(parsed_text, "{week_day_num}", std::to_string(get_day_of_week()));
+        replace_string(parsed_text, "{year}", std::to_string(get_year()));
+
+        // for wind speed, we are truncating to 1 decimal place for easier readability (nobody cares how exact it is)
+        std::string wind = std::to_string(get_wind_speed());
+        replace_string(parsed_text, "{wind_speed}", wind.substr(0, wind.find(".") + 2));
+
+        return parsed_text;
+    }
+
     std::tm* variable_utility::get_tm() {
         time_t now = std::time(0);  // generate a date and time struct with current time
         tm* time = localtime(&now);
@@ -114,5 +163,26 @@ namespace matrix_clock {
         const std::size_t totalBytes(size * num);
         out->append(in, totalBytes);    // load data from the webpage and send it back out
         return totalBytes;
+    }
+
+    std::string pad_numbers(int source) {
+        std::stringstream stream;
+
+        if (source < 10) {
+            stream << "0";  // if the integer is less than 10, add in a zero infront for readability in time
+        }
+
+        stream << std::to_string(source);
+
+        return stream.str();
+    }
+
+    void replace_string(std::string& source, std::string search, std::string replace) {
+        size_t position = source.find(search);  // find the current index of the search string
+
+        while (position != std::string::npos) { // loop until it cannot be found anymore (replaced out), will not run with 0 instances
+            source.replace(position, search.size(), replace);   // replace at the position
+            position = source.find(search, position + replace.size());  // find next instance (will not loop again with none found)
+        }
     }
 }

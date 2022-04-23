@@ -58,7 +58,8 @@ The following is the default night time clock face in the program.
 {
   "clock_data": {
     "weather_url": "https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial",
-    "bot_token": "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    "bot_token": "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
+    "chat_id": 000000000
   },
   "clock_faces": [
     {
@@ -91,6 +92,14 @@ The following is the default night time clock face in the program.
           "text": "{hour}:{minute}{ampm}"
         }
       ]
+    }
+  ],
+  "telegram_notifications": [
+    {
+      "message": "It is currently {temp} degrees outside.",
+      "hour": 8,
+      "minute": 0,
+      "days_of_week": [ 0, 1, 2, 3, 4, 5, 6]
     }
   ]
 }
@@ -176,6 +185,23 @@ There are multiple clock faces with different text, colors, and time periods in 
 
 After changing the configuration file, restart the program and it will immediately grab the data from it, no rebuilding the project necessary.
 
+### Telegram Notifications:
+
+This exist in case you want to have the program send you a text at a scheduled time every day. If you are not interested in using them, simply delete the tag from your configuration file.
+
+*Please note: if you are going to use scheduled texts, make sure you configure the chat_id field in the top of the configuration file. If you need help finding your chat id, you can press the "Chat ID" button in the inline keyboard of the bot*
+
+If you are using telegram push notifications, here are the acceptable values:
+#### Message
+This is the message that will be sent to your telegram client. You can use all the same variables as you can in a text line as in the bot.
+
+#### Minute/Hour
+This is the time to schedule the messages for. The minute is a value from 0-59, and the hour is a value from 0-23 (24 hour format). You can also set the hour field to -1 if you want the message to repeat every single hour.
+
+#### Days of Week
+This is an array of what day of the week you want your message to be sent on. These values should be a number from range 0-6 (where 0 means sunday), and you can include 1 value or up to 7 for every day of the week.
+
+
 ## Telegram Integration
 The program includes telegram bot integration that allows you to (optionally) control functions of your clock from your phone using inline keyboard buttons. This lets you turn the screen on and off, or manually switch to a different clock face without necessarily being in that time frame.
 
@@ -204,9 +230,6 @@ An example of what the telegram interface looks like is below:
 
 **Ping Clock**: This returns a message saying the bot works if it is online.
 
-**Chat ID**: This prints out the chat ID for the telegram bot. This will be used in matrix_config.json if you want to setup scheduled texts with weather data (coming soon).
+**Chat ID**: This prints out the chat ID for the telegram bot. This will be used in matrix_config.json if you want to setup scheduled texts with weather data.
 
 **Print Environment Data**: This sends all the time and weather information that could be displayed on the screen to your phone.
-
-## Todo List
-**Scheduled Texts for Environment Information**: Configure a time in the config file to send a text to the user including weather information. Maybe also configure the message that is sent and make separate days and times it can be sent at.
