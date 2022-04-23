@@ -44,7 +44,7 @@ After running the "make" command it should generate a binary named "matrix_clock
 The program requires two arguments at runtime.
 ```
 --CONFIG_FILE <config_file> - The JSON file that the clock faces will be read from
-							  I would utilize the "matrix_config.json" file inside this repository. 
+				I would utilize the "matrix_config.json" file inside this repository. 
 ```
 Full example:
 ```
