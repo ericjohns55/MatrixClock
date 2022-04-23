@@ -87,7 +87,7 @@ The following is the default night time clock face in the program.
             "b": 0
           },
           "font_size": "large_bold",
-		  "x_position": -1,
+          "x_position": -1,
           "y_position": 35,
           "text": "{hour}:{minute}{ampm}"
         }
@@ -190,6 +190,8 @@ After changing the configuration file, restart the program and it will immediate
 This exist in case you want to have the program send you a text at a scheduled time every day. If you are not interested in using them, simply delete the tag from your configuration file.
 
 *Please note: if you are going to use scheduled texts, make sure you configure the chat_id field in the top of the configuration file. If you need help finding your chat id, you can press the "Chat ID" button in the inline keyboard of the bot*
+
+In the current configuration example above, a text would be sent at 8am every morning with the current temperature.
 
 If you are using telegram push notifications, here are the acceptable values:
 #### Message
