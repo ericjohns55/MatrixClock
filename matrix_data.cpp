@@ -69,7 +69,7 @@ namespace matrix_clock {
         return names_array;
     }
 
-    bool matrix_data::load_clock_faces() {
+    bool matrix_data::load_clock_data() {
         // clear the current clock faces if they exist
 
         for (matrix_clock::clock_face* current_face : clock_faces) {    // delete all old clock faces
@@ -96,6 +96,15 @@ namespace matrix_clock {
             }
 
             file_stream.close();    // file is valid and data has been loaded, close the file and begin parsing
+
+            // clock data value, this is where the weather URL and the bot tokens are stored
+            Json::Value clock_data = jsonData["clock_data"];
+
+            // grab weather URL from the config file
+            weather_url = clock_data["weather_url"].asString();
+
+            // grab bot token from config file
+            bot_token = clock_data["bot_token"].asString();
 
             for (Json::Value::ArrayIndex face_index = 0; face_index != jsonData["clock_faces"].size(); face_index++) {  // loop through ALL clock face declared in the file
                 Json::Value clock_face_data = jsonData["clock_faces"][face_index];

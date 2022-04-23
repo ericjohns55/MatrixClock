@@ -54,40 +54,26 @@ void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* 
 }
 
 int main(int argc, char* argv[]) {
-    if (argc < 7) { // make sure the minimum amount of arguments were provided for the program to run
+    if (argc < 3) { // make sure the minimum amount of arguments were provided for the program to run
         cerr << "Only " << argc << " arguments provided:" << endl;
-        cerr << "Usage: " << argv[0] << " --WEATHER_URL <weather url> --CONFIG_FILE <config file location> --TELEGRAM_API <bot api key>" << endl;
+        cerr << "Usage: " << argv[0] << " --CONFIG_FILE <config file location>" << endl;
         return EXIT_FAILURE;
     }
 
     string config_file;     // we are going to load both the config file path and the weather url the command arguments
-    string weather_url;
-    string api_key;
 
     for (int i = 1; i < argc; i++) {    // loop through all the given arguments
-        if (string(argv[i]) == "--WEATHER_URL") {   // check if we found a weather URL specifier
-            if (i + 1 < argc) {                        // make sure there is at least one more argument past our current position
-                weather_url = argv[++i];               // load weather url from arguments
-            } else {                                   // otherwise we have not found an argument, tell the user
-                cerr << "--WEATHER_URL requires an argument" << endl;
-            }
-        } else if (string(argv[i]) == "--CONFIG_FILE") {    // do the same thing as before but for the configuration file
-            if (i + 1 < argc) {
-                config_file = argv[++i];
+        if (string(argv[i]) == "--CONFIG_FILE") {           // check if we found the config file specifier
+            if (i + 1 < argc) {                                // make sure there is at least one more position afterwards
+                config_file = argv[++i];                       // load the config file name from arguments
             } else {
-                cerr << "--CONFIG_FILE requires an argument" << endl;
-            }
-        } else if (string(argv[i]) == "--TELEGRAM_API") {
-            if (i + 1 < argc) {
-                api_key = argv[++i];
-            } else {
-                cerr << "--TELEGRAM_API requires an argument" << endl;
+                cerr << "--CONFIG_FILE requires an argument" << endl;   // otherwise warn the user
             }
         }
     }
 
-    if (config_file.empty() || config_file.empty()) // if either file is empty, count on the previous error messages saying what is wrong
-        return EXIT_FAILURE;                        // kill the program
+    if (config_file.empty())    // if either file is empty, count on the previous error messages saying what is wrong
+        return EXIT_FAILURE;    // kill the program
 
     RGBMatrix::Options defaults;
     defaults.hardware_mapping = "adafruit-hat-pwm";     // these are the most optimized hardware options for my screen
@@ -112,19 +98,19 @@ int main(int argc, char* argv[]) {
 
     rgb_matrix::FrameCanvas* offscreen = matrix->CreateFrameCanvas();   // create an offscreen canvas
 
-    matrix_clock::matrix_data clock_faces(config_file);    // create clock face container and load data from the config file
+    matrix_clock::matrix_data clock_data(config_file);    // create clock data object and load data from the config file
 
-    if (!clock_faces.load_clock_faces()) {
+    if (!clock_data.load_clock_data()) {
         cerr << "Killing program, please enter valid JSON data into " << config_file << " and run again." << endl;
         return EXIT_FAILURE;
     }
 
-    if (clock_faces.get_clock_face_count() == 0) {  // check if none loaded
+    if (clock_data.get_clock_face_count() == 0) {  // check if none loaded
         cerr << "No valid clock faces found. Make sure at least one clock face is defined in " << config_file << endl;   // kill the program because we cannot have 0 interfaces
         return EXIT_FAILURE;
     }
 
-    matrix_clock::variable_utility time_util(weather_url);   // generate a time util
+    matrix_clock::variable_utility time_util(clock_data.get_weather_url());   // generate a time util
 
     time_util.poll_date();  // on first run, poll date and weather because they have not been loaded yet
     time_util.poll_weather();
@@ -133,14 +119,17 @@ int main(int argc, char* argv[]) {
     time_util.get_time(times);
 
     // load initial clock face by setting it to the current one in the container
-    clock_faces.update_clock_face(times[3], times[1]);
+    clock_data.update_clock_face(times[3], times[1]);
 
-    // load and enable telegram bot
-    matrix_clock::matrix_telegram test(&clock_faces, &time_util, api_key);
-    test.enable_bot();
+    // only load the telegram bot if a valid key is entered
+    // otherwise the user SHOULD put in disabled as instructed in the repo
+    if (clock_data.get_bot_token() != "disabled") {
+        matrix_clock::matrix_telegram telegram_bot(&clock_data, &time_util, clock_data.get_bot_token());
+        telegram_bot.enable_bot();
+    }
 
     // if we do not find a valid clock face for the given time, we will fill with an empty clock face to display nothing on the screen
-    update_clock(offscreen, clock_faces.get_current(), &time_util);
+    update_clock(offscreen, clock_data.get_current(), &time_util);
     offscreen = matrix->SwapOnVSync(offscreen);
 
     // inform console we are starting so there is at least some feedback in console
@@ -157,7 +146,7 @@ int main(int argc, char* argv[]) {
         // only run the following code if the seconds have changed OR if a clock face has demanded an immediate update
         // otherwise sleep for 0.2 seconds
         if (previous_second != new_second) {
-            if (!clock_faces.check_recent_reload()) {   // we want to skip an extra second if the config was recently reloaded, more information in header file
+            if (!clock_data.check_recent_reload()) {   // we want to skip an extra second if the config was recently reloaded, more information in header file
                 bool new_minute = times[2] == 0;    // create boolean for if the minute changed
                 previous_second = new_second;       // update previous second for next loop
 
@@ -167,8 +156,8 @@ int main(int argc, char* argv[]) {
                 if (times[1] % 5 == 0 && new_minute)    // if the minute is a multiple of 5, update weather info (weather API has a free polling limit, so i only update once every 5 minutes)
                     time_util.poll_weather();
 
-                if (new_minute && !clock_faces.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
-                    clock_faces.update_clock_face(times[3], times[1]);
+                if (new_minute && !clock_data.clock_face_overridden()) {   // if there is a new minute, grab the interface again in case it changed (interfaces cannot change on a second)
+                    clock_data.update_clock_face(times[3], times[1]);
                 }
 
                 // update only if:
@@ -177,24 +166,24 @@ int main(int argc, char* argv[]) {
                 //      3) there is a forced update
                 // do not update under ANY OTHER CIRCUMSTANCES
                 // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
-                if (clock_faces.get_current()->contains_second_variable() || (!clock_faces.get_current()->contains_second_variable() && new_minute) || clock_faces.update_required()) {
-                    if (clock_faces.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
-                        update_clock(offscreen, clock_faces.get_current(), &time_util); // update only if the clock is on
+                if (clock_data.get_current()->contains_second_variable() || (!clock_data.get_current()->contains_second_variable() && new_minute) || clock_data.update_required()) {
+                    if (clock_data.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
+                        update_clock(offscreen, clock_data.get_current(), &time_util); // update only if the clock is on
                         offscreen = matrix->SwapOnVSync(offscreen);
                     }
 
-                    if (clock_faces.update_required()) {  // if there is a required update, set it to false so we do not force update again on new second
-                        clock_faces.set_update_required(false);
+                    if (clock_data.update_required()) {  // if there is a required update, set it to false so we do not force update again on new second
+                        clock_data.set_update_required(false);
 
-                        if (!clock_faces.is_clock_on()) {   // clear the screen if it was just turned off
+                        if (!clock_data.is_clock_on()) {   // clear the screen if it was just turned off
                             offscreen->Clear();
                             offscreen = matrix->SwapOnVSync(offscreen);
                         }
                     }
                 }
             } else {
-                clock_faces.set_recent_reload(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
-                clock_faces.update_clock_face(times[3], times[1]);
+                clock_data.set_recent_reload(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
+                clock_data.update_clock_face(times[3], times[1]);
             }
         }
 

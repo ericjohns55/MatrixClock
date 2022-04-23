@@ -58,10 +58,10 @@ namespace matrix_clock {
                 std::cout << "Could not parse data as JSON." << std::endl << error << std::endl;
             }
         } else { // unsuccessful, let the user know
-            std::cout << "Could not update weather." << std::endl << "Loading placeholder values.";
+            std::cout << "Could not update weather, loading placeholder values instead." << std::endl;
 
             forecast = "N/A";        // load placeholder values so the application can still run
-            short_forecast = "N/A";
+            short_forecast = "~Error~";
             temp = 0;
             real_feel = 0;
             wind_speed = 0.0;

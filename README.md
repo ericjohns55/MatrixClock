@@ -1,4 +1,5 @@
 
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -42,21 +43,23 @@ Night Time Clock Face
 After running the "make" command it should generate a binary named "matrix_clock"
 The program requires two arguments at runtime.
 ```
---WEATHER_URL <weather_url> - The OpenWeatherAPI key used to pull weather from
 --CONFIG_FILE <config_file> - The JSON file that the clock faces will be read from
 							  I would utilize the "matrix_config.json" file inside this repository. 
---TELEGRAM_API <api key> - The telegram API key for your telegram bot
 ```
 Full example:
 ```
-./matrix_clock --WEATHER_URL https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial --CONFIG_FILE matrix_config.json --API_KEY XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+./matrix_clock --CONFIG_FILE matrix_config.json
 ```
-If you want to add any other command line arguments embedded within the matrix display's library you can also add them before or after the required arguments.
+If you want to add any other [command line arguments embedded within the matrix display's library](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/examples-api-use#running-some-demos) you can also add them before or after the required arguments (NOT in-between)
 
 ## Configuring matrix_config.json
 The following is the default night time clock face in the program.
 ```
 {
+  "clock_data": {
+    "weather_url": "https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial",
+    "bot_token": "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+  },
   "clock_faces": [
     {
       "name": "night",
@@ -95,7 +98,24 @@ The following is the default night time clock face in the program.
 
 We can break this down into a few simple ways:
 
-### Clock faces:
+### Clock Data:
+
+#### Weather URL
+The OpenWeatherAPI key used to pull weather from
+
+In the following link, you would replace LOCATION with the number ID of your city (found by searching your city on [OpenWeatherMap](https://openweathermap.org/), searching your area, and pulling the 7 digits off of the URL.
+
+Next you would replace API_KEY with the API key you generate by signing up for their API [in OpenWeatherMap's API page](https://openweathermap.org/api).
+
+```https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial```
+
+#### Bot Token
+
+Here you would place the API key of your telegram bot (if you wish for it to be enabled in your program). You can generate an API key using the [BotFather](https://core.telegram.org/bots#6-botfather), then replace the placeholder in the config file with your API key.
+
+If you do not want to use the telegram bot integration, simply put "disabled" in the ```bot_token``` field instead.
+
+### Clock Faces:
 "clock_faces" is an array in which you will store all your clock faces. To add a clock face to the program just add a comma after the current one and declare a new one in the same format. To remove one, simply delete the block.
 **NOTE:** There must be at least one clock face for the program to run
 
@@ -103,14 +123,14 @@ The clock face must have a declared name. This is the name that will be used wit
 
 The clock face must also have a defined background color. I recommend filling in "black" under the "built_in_color" field, though you can set it to "none" and fill in the rgb values as you wish. I go more into detail about the colors field under the "Text Lines" header.
 
-### Time Periods
+#### Time Periods
 Time periods is also an array with four arguments: start_hour, start_minute, end_hour, and end_minute. The hours must be in 24 hour format [0-23], and the minutes must be from [0-60] to function.
 
 Every time the clock updates, it will check to see if it hits a new start time for a clock face and swap over to it if necessary.
 
 If the program does not find a clock face for a specific time, it will show a blank screen on the matrix and warn the user once via console output (you could use this to your advantage if you want to display a blank screen during a time period).
 
-### Text Lines
+#### Text Lines
 A text line represents a line of text visible on the matrix when the current clock face is active
 A text line must have a **color**.
 * This program has a couple declared hardcoded colors: red, orange, yellow, green, blue, purple, pink, white, gray, black, brown, and night_time (which is a darker red).
@@ -125,7 +145,7 @@ X and Y positions:
 * The X position represents where the line of text will start on the matrix in the horizontal axis.
 	* You can set the X-position to -1 if you want the line of text to be centered (what I most recommend)
 
-#### Text
+**Text**
 Text is a little more complicated because you most likely want the data printed to be current weather and time information.
 To make this easier I have created what I call *variables* to assist you in keeping the data updated.
 Here is a list of the current variables:
@@ -190,5 +210,3 @@ An example of what the telegram interface looks like is below:
 
 ## Todo List
 **Scheduled Texts for Environment Information**: Configure a time in the config file to send a text to the user including weather information. Maybe also configure the message that is sent and make separate days and times it can be sent at.
-
-**Background Color/Images**: Allow the user to do a background color for each clock face (default black).

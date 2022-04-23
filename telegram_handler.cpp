@@ -177,7 +177,9 @@ namespace matrix_clock {
                     bot.getApi().sendMessage(query->message->chat->id, "Bot is working correctly!");
                 } else if (query->data == "command_reload_config") {
                     container->set_recent_reload(true); // set recent reload so we skip an update second
-                    container->load_clock_faces();
+                    container->load_clock_data();
+                    var_util->set_weather_url(container->get_weather_url());    // update the weather URL in case it changed and poll weather again
+                    var_util->poll_weather();
                     container->set_update_required(true);       // force update
                 } else if (query->data == "command_chatid") {
                     std::stringstream stream;
@@ -199,11 +201,16 @@ namespace matrix_clock {
                     stream << (times[1] < 10 ? "0" : "") << times[1];
                     stream << (times[3] < 12 ? "am" : "pm") << std::endl << std::endl;
 
-                    // print out the weather
-                    stream << "Today's weather forecast: " << var_util->get_forecast() << std::endl;
-                    stream << "It is currently " << var_util->get_temp() << "F (" << var_util->get_real_feel() << "F real feel) ";
-                    stream << "with a humidity of " << var_util->get_humidity() << "%" << std::endl;
-                    stream << "The wind is currently blowing at " << var_util->get_wind_speed() << "mph" << std::endl;
+                    // no need to print out fake data if it is not correct
+                    if (var_util->get_forecast_short() != "~Error~") {
+                        // print out the weather
+                        stream << "Today's weather forecast: " << var_util->get_forecast() << std::endl;
+                        stream << "It is currently " << var_util->get_temp() << "F (" << var_util->get_real_feel() << "F real feel) ";
+                        stream << "with a humidity of " << var_util->get_humidity() << "%" << std::endl;
+                        stream << "The wind is currently blowing at " << var_util->get_wind_speed() << "mph" << std::endl;
+                    } else {
+                        stream << "Could not load current weather data. Check your weather URL in your matrix config file." << std::endl;
+                    }
 
                     // send the build stream to the user
                     bot.getApi().sendMessage(query->message->chat->id, stream.str());
@@ -221,7 +228,8 @@ namespace matrix_clock {
             } catch (std::exception& e) {       // this is in case network drops, prevents crashes on unstable networks
                 if (warn_once) {
                     std::cout << e.what() << std::endl;
-                    std::cout << "Could not update telegram bot. Service will resume once a new connection is found." << std::endl;
+                    std::cout << "Could not update telegram bot. Please check your network connection or bot token as defined in the matrix config file." << std::endl;
+                    std::cout << "Service will resume once a new connection is found. If you did not want telegram bot service, please set your bot token to \"disabled\" in your matrix config file." << std::endl;
                     warn_once = false;
                 }
             }

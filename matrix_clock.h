@@ -193,6 +193,12 @@ namespace matrix_clock {
             // returns the current year
             //      poll_date() must be called before this is usable
             inline int get_year(void) const { return year; }
+
+            // manually set the weather URL
+            // only use this after reloading clock data via a telegram bot
+            // the load_clock_data() method automatically loads the weather URL from the config file
+            //          on first run into the variable_utility object
+            inline void set_weather_url(std::string url) { weather_url = url; }
     };
 
     // text_line class
@@ -228,11 +234,6 @@ namespace matrix_clock {
 
             // get the font specified for the text line
             inline matrix_font get_font(void) const { return font_size; }
-
-            // get the unparsed x positioning of the text line
-            // the x positioning is considered where you want to start drawing the text
-            // if you want the centered position, call parse_x()
-            inline int get_x(void) { return x_pos; }
 
             // get the y positioning of the text line
             // the y positioning is considered the bottom of the line of text
@@ -297,6 +298,8 @@ namespace matrix_clock {
             clock_face* current;
             clock_face* empty;
             std::string config_file;
+            std::string weather_url;
+            std::string bot_token;
             bool config_recently_reloaded;
             bool override_interface;
             bool force_update;
@@ -320,15 +323,23 @@ namespace matrix_clock {
             // update the clock face in the given time
             void update_clock_face(int hour, int minute);
 
-            //this loads all the clock faces from the matrix_config.json in the repository
+            //this loads all the clock faces and other data from the matrix_config.json in the repository
             //you can edit matrix_config.json all you want, as long as valid json and data is submitted than it will load the
             //program using that data and update everything when needed
             //this MUST BE called before you attempt to write any data to the screen
             //otherwise nothing will be loaded and there will be no information to grab for writing
-            bool load_clock_faces();
+            bool load_clock_data();
 
             // get the current clock face
             inline clock_face* get_current(void) const { return current; }
+
+            // get the weather URL declared in matrix_config.json
+            // Note: you MUST run load_clock_data() before this is valid
+            inline std::string get_weather_url(void) const { return weather_url; }
+
+            // get the bot token declared in matrix_config.json
+            // Note: you MUST run load_clock_data() before this is valid
+            inline std::string get_bot_token(void) const { return bot_token; }
 
             // check whether the clock face is overridden via the telegram bot
             inline bool clock_face_overridden(void) const { return override_interface; }
