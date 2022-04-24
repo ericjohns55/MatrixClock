@@ -310,8 +310,8 @@ namespace matrix_clock {
         // checks if it is time to send a push notification, returns true if so
         // if hour is -1, we consider it hourly and this is acceptable
         inline bool is_push_time(int current_hour, int current_minute, int day_of_week) {
-            return (current_hour == hour || hour == -1) && current_minute == minute && std::find(days.begin(), days.end(), day_of_week) != days.end();
-        }
+            return (current_hour == hour || 24 % abs(current_hour) == 0) && current_minute == minute && std::find(days.begin(), days.end(), day_of_week) != days.end();
+        }       // 24 % the value lets you put in values like -1 to repeat hourly, or -2 to repeat every other hour, or -3 for every third hour, etc
 
         // grab the message for the notification
         inline std::string get_message(void) const { return message; }

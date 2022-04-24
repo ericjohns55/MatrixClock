@@ -167,7 +167,7 @@ Here is a list of the current variables:
 | {minute}   |  the current minute|
 | {second}   | the current second|
 | {ampm}   | prints out am if it is before noon, pm if not
-| {temp}   |the current temperature outside
+| {temp}   | the current temperature outside
 | {temp_feel}   | the real feel outside|
 | {humidity}   | the humidity outside|
 | {forecast}   | the forecast outside (NOTE: this is typically too long to fit on the screen)|
@@ -196,7 +196,9 @@ If you are using telegram push notifications, here are the acceptable values:
 This is the message that will be sent to your telegram client. You can use all the same variables as you can in a text line as in the bot.
 
 #### Minute/Hour
-This is the time to schedule the messages for. The minute is a value from 0-59, and the hour is a value from 0-23 (24 hour format). You can also set the hour field to -1 if you want the message to repeat every single hour.
+This is the time to schedule the messages for. The minute is a value from 0-59, and the hour is a value from 0-23 (24 hour format).
+
+You can also set the hour field to a negative value with a number if you want the message to repeat every few hours. For example, if you set it to -1, a message would repeat every hour, if it was -2 it would be every other hour, if it was -3 it would be every third hour, etc.
 
 #### Days of Week
 This is an array of what day of the week you want your message to be sent on. These values should be a number from range 0-6 (where 0 means sunday), and you can include 1 value or up to 7 for every day of the week.
