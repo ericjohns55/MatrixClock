@@ -1,8 +1,8 @@
 {
   "clock_data": {
-    "weather_url": "https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial",
-    "bot_token": "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    "chat_id": 000000000,
+    "weather_url": "https://api.openweathermap.org/data/2.5/weather?id=5180934&appid=5014239eec4c239519f4a92fcb47427c&units=imperial",
+    "bot_token": "1223789011:AAGkzIsTY1eH5ox8klW29rnBnBkZfpUUc0w",
+    "chat_id": 447424506,
     "fonts_folder": "/home/pi/rpi-rgb-led-matrix/fonts"
   },
   "clock_faces": [

@@ -1,6 +1,7 @@
 
 
 
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -60,7 +61,8 @@ The following is the default night time clock face in the program.
   "clock_data": {
     "weather_url": "https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial",
     "bot_token": "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-    "chat_id": 000000000
+    "chat_id": 000000000,
+    "fonts_folder": "/home/pi/rpi-rgb-led-matrix/fonts"
   },
   "clock_faces": [
     {
@@ -124,6 +126,12 @@ Next you would replace API_KEY with the API key you generate by signing up for t
 Here you would place the API key of your telegram bot (if you wish for it to be enabled in your program). You can generate an API key using the [BotFather](https://core.telegram.org/bots#6-botfather), then replace the placeholder in the config file with your API key.
 
 If you do not want to use the telegram bot integration, simply put "disabled" in the ```bot_token``` field instead.
+
+#### Font Folder
+
+This is the file path for where all the matrix fonts are stored. For most people you will not have to change this if you cloned the rgb matrix's repository into your home folder, but if it is in some other location make sure you check that this file path is correct.
+
+*Note: If text is not showing up in the matrix but there are no errors in console, check your file path for your fonts. It is possible the application just cannot find them*
 
 ### Clock Faces:
 "clock_faces" is an array in which you will store all your clock faces. To add a clock face to the program just add a comma after the current one and declare a new one in the same format. To remove one, simply delete the block.
