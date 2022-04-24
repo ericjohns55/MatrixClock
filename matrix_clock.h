@@ -220,7 +220,7 @@ namespace matrix_clock {
             //      instantiates the text_line object using these values
             text_line(matrix_color, matrix_font, int, int, std::string);
 
-            // parse all variables passed into the text object as actual dadta
+            // parse all variables passed into the text object as actual data
             // use the variable_utility to convert these variables into readable data
             void parse_variables(matrix_clock::variable_utility* util);
 
@@ -401,7 +401,7 @@ namespace matrix_clock {
             // check whether the config was recently reloaded
             // we want to check this because the telegram bot runs on a separate thread so it is possible
             // that a natural update could run while we are clearing it
-            // in this scenario we want to make sure it is not in the process of being reloaded while we are accessesing
+            // in this scenario we want to make sure it is not in the process of being reloaded while we are accessing
             // data because it could potentially become null halfway through updating
             inline bool check_recent_reload(void) const { return config_recently_reloaded; }
 

@@ -56,18 +56,18 @@ void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* 
 int main(int argc, char* argv[]) {
     if (argc < 3) { // make sure the minimum amount of arguments were provided for the program to run
         cerr << "Only " << argc << " arguments provided:" << endl;
-        cerr << "Usage: " << argv[0] << " --CONFIG_FILE <config file location>" << endl;
+        cerr << "Usage: " << argv[0] << " --CONFIG <config file location>" << endl;
         return EXIT_FAILURE;
     }
 
     string config_file;     // we are going to load both the config file path and the weather url the command arguments
 
     for (int i = 1; i < argc; i++) {    // loop through all the given arguments
-        if (string(argv[i]) == "--CONFIG_FILE") {           // check if we found the config file specifier
+        if (string(argv[i]) == "--CONFIG") {           // check if we found the config file specifier
             if (i + 1 < argc) {                                // make sure there is at least one more position afterwards
                 config_file = argv[++i];                       // load the config file name from arguments
             } else {
-                cerr << "--CONFIG_FILE requires an argument" << endl;   // otherwise warn the user
+                cerr << "--CONFIG requires an argument" << endl;   // otherwise warn the user
             }
         }
     }

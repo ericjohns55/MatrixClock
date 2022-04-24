@@ -43,12 +43,12 @@ Night Time Clock Face
 After running the "make" command it should generate a binary named "matrix_clock"
 The program requires two arguments at runtime.
 ```
---CONFIG_FILE <config_file> - The JSON file that the clock faces will be read from
+--CONFIG <config_file> - The JSON file that the clock faces will be read from
 				I would utilize the "matrix_config.json" file inside this repository. 
 ```
 Full example:
 ```
-./matrix_clock --CONFIG_FILE matrix_config.json
+./matrix_clock --CONFIG matrix_config.json
 ```
 If you want to add any other [command line arguments embedded within the matrix display's library](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/examples-api-use#running-some-demos) you can also add them before or after the required arguments (NOT in-between)
 
@@ -87,7 +87,7 @@ The following is the default night time clock face in the program.
             "b": 0
           },
           "font_size": "large_bold",
-          "x_position": -1,
+		  "x_position": -1,
           "y_position": 35,
           "text": "{hour}:{minute}{ampm}"
         }
@@ -166,18 +166,18 @@ Here is a list of the current variables:
 | {hour24}   | the current hour in 24 hour format (0-23)|
 | {minute}   |  the current minute|
 | {second}   | the current second|
-| {ampm}   | prints out am if it is before noon, pm if not
-| {temp}   | the current temperature outside
+| {ampm}   | prints out am if it is before noon, pm if not|
+| {temp}   | the current temperature outside|
 | {temp_feel}   | the real feel outside|
 | {humidity}   | the humidity outside|
 | {forecast}   | the forecast outside (NOTE: this is typically too long to fit on the screen)|
 | {forecast_short}   | a one word description of the weather outside (this can always fit on a screen)|
-| {date_format}   | the date formatted in MM-DD-YYYY format
+| {date_format}   | the date formatted in MM-DD-YYYY format|
 | {day_name}   | the current hour in 24 hour format (0-23)|
-| {month_name}   | the name of the current month
-| {month_day}   | the day of the month
+| {month_name}   | the name of the current month|
+| {month_day}   | the day of the month|
 | {week_day_num}   | the day of the week (where 0 is sunday, 1 is monday, etc)|
-| {year}   | the current year
+| {year}   | the current year|
 
 To use any of these variables, put them into the text field in the JSON file and they will update with the clock. You can also mix any form of constant text with a variable (for example: "{temp_feel}F" could put out "42F". If you are not interested in using any variables, constant text will still work perfectly fine.
 
@@ -190,8 +190,6 @@ After changing the configuration file, restart the program and it will immediate
 This exist in case you want to have the program send you a text at a scheduled time every day. If you are not interested in using them, simply delete the tag from your configuration file.
 
 *Please note: if you are going to use scheduled texts, make sure you configure the chat_id field in the top of the configuration file. If you need help finding your chat id, you can press the "Chat ID" button in the inline keyboard of the bot*
-
-In the current configuration example above, a text would be sent at 8am every morning with the current temperature.
 
 If you are using telegram push notifications, here are the acceptable values:
 #### Message
