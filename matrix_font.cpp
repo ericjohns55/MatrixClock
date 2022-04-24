@@ -31,7 +31,7 @@ namespace matrix_clock {
         return std::stoi(font_size.substr(0, font_size.find("x"))); // find the x value in the string by taking the substring of the beginning to anything before the 'x'
     }
 
-    void matrix_font::parse_font(std::string font) {
+    void matrix_font::parse_font(std::string font_folder, std::string font) {
         if (font == "small") {      // check out prebuilt fonts first, these we do not need to parse because we know them to be correct
             font_size = "5x8";
         } else if (font == "medium") {
@@ -41,7 +41,7 @@ namespace matrix_clock {
         } else if (font == "large_bold") {
             font_size = "8x13B";
         } else {
-            std::ifstream stream(get_font_file(font));      // otherwise it is a custom one, check if the file is valid and set to a default value if not
+            std::ifstream stream(get_font_file(font_folder, font));      // otherwise it is a custom one, check if the file is valid and set to a default value if not
             if (!stream.good()) {
                 std::cout << "Could not find font " << font << ", loading medium font (6x9.bdf) instead." << std::endl;
                 this->font_size = "6x9";
@@ -51,9 +51,9 @@ namespace matrix_clock {
         }
     }
 
-    std::string matrix_font::get_font_file(std::string font_size) {
+    std::string matrix_font::get_font_file(std::string font_folder, std::string font_size) {
         std::stringstream file_builder;
-        file_builder << "../fonts/" << font_size << ".bdf"; // build the font path using a stringstream and return it
+        file_builder << font_folder << "/" << font_size << ".bdf"; // build the font path using a stringstream and return it
         return file_builder.str();
     }
 }

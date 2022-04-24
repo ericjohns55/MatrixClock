@@ -92,13 +92,13 @@ namespace matrix_clock {
             // if you pass in the string version of any matrix_built_in_font enums, it will automatically convert it to a valid string value
             // if not it will make sure that you passed in a valid font file name and load that to the field
             // if the file name is not valid, it loads the 6x9 font size (i think this is the most readable size) as a placeholder and sends an error to console
-            void parse_font(std::string font);
+            void parse_font(std::string font_folder, std::string font);
         public:
             // default constructor to instantiate to a default (medium fault)
             inline matrix_font() { font_size = "6x9"; }
 
             // constructor to parse matrix_font from file
-            inline matrix_font(std::string font_size) { parse_font(font_size); }
+            inline matrix_font(std::string font_folder, std::string font_size) { parse_font(font_folder, font_size); }
 
             // constructor to parse font information from a built in font
             matrix_font(matrix_built_in_font built_font);
@@ -113,7 +113,7 @@ namespace matrix_clock {
             inline void set_font_size(std::string new_font) { font_size = new_font; }
 
             // get the font file for the
-            static std::string get_font_file(std::string font_size);
+            static std::string get_font_file(std::string font_folder, std::string font_size);
     };
 
     // variable_utility class
@@ -352,6 +352,7 @@ namespace matrix_clock {
             std::string weather_url;
             std::string bot_token;
             std::int64_t bot_chat_id;
+            std::string fonts_folder;
             bool config_recently_reloaded;
             bool override_interface;
             bool force_update;
@@ -399,6 +400,10 @@ namespace matrix_clock {
             // get the defined chat id
             // Note: you MUST run load_clock_data() before this is valid
             inline std::int64_t get_chat_id(void) const { return bot_chat_id; }
+
+            // get the folder the rgb matrix fonts are stored in
+            // Note: you MUST run load_clock_data() before this is valid
+            inline std::string get_fonts_folder(void) const { return fonts_folder; }
 
             // get the telegram push notifications vector
             inline std::vector<telegram_push*> get_notifications(void) const { return push_notifications; }

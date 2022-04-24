@@ -116,6 +116,9 @@ namespace matrix_clock {
             // the user can find this by clicking on "Chat ID" in the inline keyboard menu within the bot
             bot_chat_id = clock_data["chat_id"].asInt();
 
+            // load the folder the fonts are stored in from file
+            fonts_folder = clock_data["fonts_folder"].asString();
+
             for (Json::Value::ArrayIndex face_index = 0; face_index != jsonData["clock_faces"].size(); face_index++) {  // loop through ALL clock face declared in the file
                 Json::Value clock_face_data = jsonData["clock_faces"][face_index];
                 std::string name = clock_face_data["name"].asString();
@@ -168,7 +171,7 @@ namespace matrix_clock {
                         color = matrix_clock::matrix_color(prebuilt_color_name);
                     }
 
-                    matrix_clock::matrix_font font_size(text_data["font_size"].asString()); // grab matrix_font size, positioning, and text
+                    matrix_clock::matrix_font font_size(fonts_folder, text_data["font_size"].asString()); // grab matrix_font size, positioning, and text
                     int x_pos = text_data["x_position"].asInt();
                     int y_pos = text_data["y_position"].asInt();
                     std::string text = text_data["text"].asString();
