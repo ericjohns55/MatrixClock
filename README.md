@@ -99,7 +99,7 @@ The following is the default night time clock face in the program.
       "message": "It is currently {temp} degrees outside.",
       "hour": 8,
       "minute": 0,
-      "days_of_week": [ 0, 1, 2, 3, 4, 5, 6]
+      "days_of_week": [ 0, 1, 2, 3, 4, 5, 6 ]
     }
   ]
 }

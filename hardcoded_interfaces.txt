@@ -1,0 +1,91 @@
+//
+//matrix_clock::matrix_data generate_interfaces() { // TODO: read from json
+//    matrix_clock::matrix_data container;
+//
+//    matrix_clock::time_period day_period(9, 0, 23, 00);
+//    matrix_clock::time_period dusk_period1(23, 0, 2, 0);
+//    matrix_clock::time_period dusk_period2(8, 0, 9, 0);
+//    matrix_clock::time_period night_period(2, 0, 8, 0);
+//
+//    matrix_clock::clock_face* day_interface = new matrix_clock::clock_face;
+//    matrix_clock::clock_face* dusk_interface = new matrix_clock::clock_face;
+//    matrix_clock::clock_face* night_interface = new matrix_clock::clock_face;
+//
+//    day_interface->add_time_period(day_period);
+//    dusk_interface->add_time_period(dusk_period1);
+//    dusk_interface->add_time_period(dusk_period2);
+//    night_interface->add_time_period(night_period);
+//
+//    matrix_clock::text_line day_text(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::purple),
+//                                     matrix_clock::matrix_font::small, 8,
+//                                     "{day_name}");
+//
+//    matrix_clock::text_line date_text(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::purple),
+//                                      matrix_clock::matrix_font::small, 16,
+//                                      "{month_name} {month_day}");
+//
+//    matrix_clock::text_line time_text(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::red),
+//                                      matrix_clock::matrix_font::large_bold, 30,
+//                                      "{hour}:{minute}{ampm}");
+//
+//    matrix_clock::text_line temp_text(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::blue),
+//                                      matrix_clock::matrix_font::medium, 42,
+//                                      "{temp}F   {temp_feel}F");
+//
+//    matrix_clock::text_line forecast_text(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::blue),
+//                                          matrix_clock::matrix_font::medium, 51,
+//                                          "{forecast_short}");
+//
+//    matrix_clock::text_line wind_text(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::blue),
+//                                      matrix_clock::matrix_font::medium, 60,
+//                                      "{wind_speed} mph");
+//
+//    matrix_clock::text_line day_text_dusk(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::night_time),
+//                                     matrix_clock::matrix_font::small, 8,
+//                                     "{day_name}");
+//
+//    matrix_clock::text_line date_text_dusk(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::night_time),
+//                                      matrix_clock::matrix_font::small, 16,
+//                                      "{month_name} {month_day}");
+//
+//    matrix_clock::text_line time_text_dusk(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::night_time),
+//                                      matrix_clock::matrix_font::large_bold, 30,
+//                                      "{hour}:{minute}{ampm}");
+//
+//    matrix_clock::text_line temp_text_dusk(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::night_time),
+//                                      matrix_clock::matrix_font::medium, 42,
+//                                      "{temp}F   {temp_feel}F");
+//
+//    matrix_clock::text_line forecast_text_dusk(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::night_time),
+//                                          matrix_clock::matrix_font::medium, 51,
+//                                          "{forecast_short}");
+//
+//    matrix_clock::text_line wind_text_dusk(matrix_clock::matrix_color(matrix_clock::matrix_prebuilt_colors::night_time),
+//                                            matrix_clock::matrix_font::medium, 60,
+//                                            "{wind_speed} mph");
+//
+//    matrix_clock::matrix_color midnight_color(32, 0, 0);
+//    matrix_clock::text_line time_text_night(midnight_color, matrix_clock::matrix_font::large_bold, 35, "{hour}:{minute}{ampm}");
+//
+//    day_interface->add_text(day_text);
+//    day_interface->add_text(date_text);
+//    day_interface->add_text(time_text);
+//    day_interface->add_text(temp_text);
+//    day_interface->add_text(forecast_text);
+//    day_interface->add_text(wind_text);
+//
+//    dusk_interface->add_text(day_text_dusk);
+//    dusk_interface->add_text(date_text_dusk);
+//    dusk_interface->add_text(time_text_dusk);
+//    dusk_interface->add_text(temp_text_dusk);
+//    dusk_interface->add_text(forecast_text_dusk);
+//    dusk_interface->add_text(wind_text_dusk);
+//
+//    night_interface->add_text(time_text_night);
+//
+//    container.add_interface(day_interface);
+//    container.add_interface(dusk_interface);
+//    container.add_clock_face(night_interface);
+//
+//    return container;
+//}
