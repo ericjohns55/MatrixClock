@@ -1,7 +1,3 @@
-
-
-
-
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -40,9 +36,11 @@ Night Time Clock Face
 2) Clone this repository into the main directory of the matrix repository [here](https://github.com/hzeller/rpi-rgb-led-matrix) 
 3) Run the "make" command
 	* Note: if you are changing any of the RGB Matrix defaults in matrix_clock.cpp, do this before running "make"
+4) Edit matrix_config.json to whatever values you please.
+	a) Make sure you edit the weather URL and font_folder tab as needed, or the program will not run. If you do not wish to use the telegram bot, set the bot_token to "disabled" 
 
 ## Running the Program
-After running the "make" command it should generate a binary named "matrix_clock"
+After running the "make" command and configuring your json file you should see a binary named "matrix_clock"
 The program requires two arguments at runtime.
 ```
 --CONFIG <config_file> - The JSON file that the clock faces will be read from
@@ -248,3 +246,33 @@ An example of what the telegram interface looks like is below:
 **Chat ID**: This prints out the chat ID for the telegram bot. This will be used in matrix_config.json if you want to setup scheduled texts with weather data.
 
 **Print Environment Data**: This sends all the time and weather information that could be displayed on the screen to your phone.
+
+## Enable as a System Service
+
+If you are like me and want the program to automatically run at boot, you can create a service as follows:
+
+1) Change directory to ```/lib/systemd/system```
+2) Create a .service file that will hold your information, mine will be called ```matrix_clock.service```
+3) Run a nano command on the file and add the following text:
+```
+[Unit]
+Description=Matrix Clock
+
+[Service]
+ExecStart=/home/pi/rpi-rgb-led-matrix/MatrixClock/matrix_clock --led-slowdown-gpio=3 --CONFIG /home/pi/rpi-rgb-led-matrix/MatrixClock/matrix_config.json
+Restart=abort
+
+[Install]
+WantedBy=multi-user.target
+```
+Obviously adjust your file paths and configuration file as needed; also add in whatever specific runtime arguments you want as well.
+
+4) Once you are done there, run these following commands to enable and run the clock:
+```
+sudo systemctl daemon-reload
+sudo systemctl enable matrix_clock.service
+sudo systemctl start matrix_clock.service
+```
+These commands reload the services, enable your new service, then start it immediately.
+
+*Note: never let more than once instance of this program run at once, as it will cause problems between the libraries and the physical matrix itself*
