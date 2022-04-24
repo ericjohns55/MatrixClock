@@ -79,23 +79,41 @@ namespace matrix_clock {
             inline int get_blue(void) const { return b; }
     };
 
-    // enum for font sizes
-    enum matrix_font { small, medium, large, large_bold };
+    // enum for matrix_font sizes
+    enum matrix_built_in_font { small, medium, large, large_bold };
 
-    // font class
-    //      Helper methods to parse a matrix_font enum into a font usable on the matrix display
-    class font {
+    // matrix_font class
+    //      Helper methods to parse a matrix_font enum into a matrix_font usable on the matrix display
+    class matrix_font {
+        private:
+            std::string font_size;
+
+            // parse the string value of a font into a valid font that the application we can use
+            // if you pass in the string version of any matrix_built_in_font enums, it will automatically convert it to a valid string value
+            // if not it will make sure that you passed in a valid font file name and load that to the field
+            // if the file name is not valid, it loads the 6x9 font size (i think this is the most readable size) as a placeholder and sends an error to console
+            void parse_font(std::string font);
         public:
-            // get the width of one of the hardcoded matrix_font's
-            static int get_x(matrix_font);
+            // default constructor to instantiate to a default (medium fault)
+            inline matrix_font() { font_size = "6x9"; }
 
-            // return the font file location for one of the matrix_font values
-            static std::string parse_font(matrix_font);
+            // constructor to parse matrix_font from file
+            inline matrix_font(std::string font_size) { parse_font(font_size); }
 
-            // get a matrix_font object for a string entered
-            // this string should have the same value as a matrix_font enum name
-            // this will be used more when parsing values from json
-            static matrix_font font_from_string(std::string);
+            // constructor to parse font information from a built in font
+            matrix_font(matrix_built_in_font built_font);
+
+            // get the width of a character of a font
+            int get_x() const;
+
+            // get the current font size
+            inline std::string get_font(void) const { return font_size; }
+
+            // change the font size of an already created object
+            inline void set_font_size(std::string new_font) { font_size = new_font; }
+
+            // get the font file for the
+            static std::string get_font_file(std::string font_size);
     };
 
     // variable_utility class
@@ -216,7 +234,7 @@ namespace matrix_clock {
             std::string text;
             std::string parsed_text;
         public:
-            // constructor that takes in a color, font, x position, y position, and a text string
+            // constructor that takes in a color, matrix_font, x position, y position, and a text string
             //      instantiates the text_line object using these values
             text_line(matrix_color, matrix_font, int, int, std::string);
 
@@ -236,7 +254,7 @@ namespace matrix_clock {
             // it is assumed that you will call parse_variables() before this
             inline std::string get_parsed_text(void) { return parsed_text; }
 
-            // get the font specified for the text line
+            // get the matrix_font specified for the text line
             inline matrix_font get_font(void) const { return font_size; }
 
             // get the y positioning of the text line

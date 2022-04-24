@@ -64,7 +64,7 @@ namespace matrix_telegram_integration {
             int length = container->get_clock_face_count(); // length of the clock faces container
 
             // this is the loop for the amount of rows we will have, three clock faces names allowed per row
-            for (size_t i = 0; i < (length / 3) + (length % 3 == 0 ? 0 : 1); i++) { // loop until we have the amount of rows = to the count / 3 + 1 more if there is extra
+            for (int i = 0; i < (length / 3) + (length % 3 == 0 ? 0 : 1); i++) { // loop until we have the amount of rows = to the count / 3 + 1 more if there is extra
                 std::vector<TgBot::InlineKeyboardButton::Ptr> row;  // vector of buttons for the cell
 
                 for (size_t j = 0; j < 3; j++) {    // loop until there is three buttons

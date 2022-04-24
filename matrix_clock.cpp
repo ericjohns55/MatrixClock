@@ -44,10 +44,10 @@ void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* 
         matrix_clock::text_line current_line = clock_face->get_line(i);  // grab current line from the clock face
         current_line.parse_variables(util);     // parse the variables into actual data
 
-        rgb_matrix::Font font; // create a font parser object
-        font.LoadFont(matrix_clock::font::parse_font(current_line.get_font()).c_str());
+        rgb_matrix::Font font; // convert our font to the font declared in the matrix_library
+        font.LoadFont(matrix_clock::matrix_font::get_font_file(current_line.get_font().get_font()).c_str());
 
-        // draw the text using the color, positionings, and font size declared on the off screen campus
+        // draw the text using the color, positionings, and matrix_font size declared on the off screen campus
         rgb_matrix::DrawText(offscreen, font, current_line.parse_x(), current_line.get_y(),
                              current_line.get_color(), current_line.get_parsed_text().c_str());
     }
@@ -81,8 +81,7 @@ int main(int argc, char* argv[]) {
     defaults.cols = 64;
     defaults.pwm_lsb_nanoseconds = 130;
     defaults.brightness = 50;
-    defaults.limit_refresh_rate_hz = 300;
-//    defaults.show_refresh_rate = true;                // for debugging purposes
+    defaults.limit_refresh_rate_hz = 300;               // helps it a little more stable
 
     // load more flags from command line that you cannot in the code
     // for example, i use --led-gpio-slowdown in the program arguments and it pulls in there

@@ -6,48 +6,54 @@
 // Helper methods for the matrix_font enum
 //
 
+#include <iostream>
+#include <sstream>
+#include <fstream>
 #include "matrix_clock.h"
 
 namespace matrix_clock {
-    int font::get_x(matrix_font font_size) {
-        switch (font_size) {        // i hardcoded 4 fonts, these are the widths of each
+    matrix_font::matrix_font(matrix_built_in_font built_font) {
+        switch (built_font) {           // convert our built in fonts
             case small:
-                return 5;
+                font_size = "5x8";      break;
             case medium:
-                return 6;
+                font_size = "6x9";      break;
             case large:
-                return 8;
+                font_size = "8x13";     break;
             case large_bold:
-                return 8;
+                font_size = "8x13B";    break;
             default:
-                return 0;
+                font_size = "6x9";      break;
         }
     }
 
-    std::string font::parse_font(matrix_font font_size) {   // grab the fonts from the rpi-rgb-led-matrix's font library
-        switch (font_size) {                                // it is assumed that this program will be cloned into the matrix library's repo folder
-            case small:
-                return "../fonts/5x8.bdf";
-            case medium:
-                return "../fonts/6x9.bdf";
-            case large:
-                return "../fonts/8x13.bdf";
-            case large_bold:
-                return "../fonts/8x13B.bdf";
-            default:
-                return "../fonts/6x9.bdf";  // default to medium if something goes wrong (should not be possible)
-        }
+    int matrix_font::get_x() const {
+        return std::stoi(font_size.substr(0, font_size.find("x"))); // find the x value in the string by taking the substring of the beginning to anything before the 'x'
     }
 
-    matrix_font font::font_from_string(std::string font_size) {
-        if (font_size == "small") {     // i considered mapping these conversions from string to enum, however with 4 cases i thought this was more efficient
-            return matrix_font::small;
-        } else if (font_size == "medium") {
-            return matrix_font::medium;
-        } else if (font_size == "large") {
-            return matrix_font::large;
+    void matrix_font::parse_font(std::string font) {
+        if (font == "small") {      // check out prebuilt fonts first, these we do not need to parse because we know them to be correct
+            font_size = "5x8";
+        } else if (font == "medium") {
+            font_size = "6x9";
+        } else if (font == "large") {
+            font_size = "8x13";
+        } else if (font == "large_bold") {
+            font_size = "8x13B";
         } else {
-            return matrix_font::large_bold;
+            std::ifstream stream(get_font_file(font));      // otherwise it is a custom one, check if the file is valid and set to a default value if not
+            if (!stream.good()) {
+                std::cout << "Could not find font " << font << ", loading medium font (6x9.bdf) instead." << std::endl;
+                this->font_size = "6x9";
+            } else {
+                this->font_size = font;     // valid font, we can use it with no change necessary
+            }
         }
+    }
+
+    std::string matrix_font::get_font_file(std::string font_size) {
+        std::stringstream file_builder;
+        file_builder << "../fonts/" << font_size << ".bdf"; // build the font path using a stringstream and return it
+        return file_builder.str();
     }
 }

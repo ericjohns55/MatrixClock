@@ -1,5 +1,6 @@
 
 
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -146,8 +147,12 @@ A text line must have a **color**.
 * If you do not wish to use one of the hardcoded colors, set the "built_in_color" field to "none" then fill in the rgb values with your intended color
 
 A text line must also have a **font**.
-* A font can be small, medium large, or large_bold.
-* Custom fonts are not currently supported.
+* A font can be small, medium, large, or large_bold (if you are using the fonts I built in).
+* You can also use any of the fonts declared in the [fonts folder](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/fonts) in the rgb matrix library.
+	* If you use these, please do not include the .bdf extension at the end. 
+	* For example, if you want to use the 9x15B font, you would just type "9x15B" into the font field and the application will automatically check the fonts folder for it.
+	*  As long as the font exists in the fonts folder, the application will be able to find it assuming you type in the file name correctly.
+* If you enter an invalid font name, the application will substitute it with the medium font size (6x9). I picked this value because I think it is the most readable when you have other text on the screen.
 
 X and Y positions:
 * The Y position represents the location where the BOTTOM of the line of text will be drawn. For example, if you printed out Hello at the position of 32, the bottom left pixel of the H would be at Y 32 and the rest of the text higher up.

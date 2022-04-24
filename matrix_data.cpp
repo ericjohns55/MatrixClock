@@ -155,10 +155,7 @@ namespace matrix_clock {
                 for (Json::Value::ArrayIndex text_index = 0; text_index != clock_face_data["text_lines"].size(); text_index++) {
                     Json::Value text_data = clock_face_data["text_lines"][text_index];
 
-                    matrix_clock::matrix_color color;       // variables that will need to be filled
-                    matrix_clock::matrix_font font_size;
-                    int x_pos, y_pos;
-                    std::string text;
+                    matrix_clock::matrix_color color;       // color variable that will be filled in a minute
 
                     if (text_data["color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
                         int red = text_data["color"]["r"].asInt();
@@ -171,10 +168,10 @@ namespace matrix_clock {
                         color = matrix_clock::matrix_color(prebuilt_color_name);
                     }
 
-                    font_size = matrix_clock::font::font_from_string(text_data["font_size"].asString());    // grab font size, positioning, and text
-                    x_pos = text_data["x_position"].asInt();
-                    y_pos = text_data["y_position"].asInt();
-                    text = text_data["text"].asString();
+                    matrix_clock::matrix_font font_size(text_data["font_size"].asString()); // grab matrix_font size, positioning, and text
+                    int x_pos = text_data["x_position"].asInt();
+                    int y_pos = text_data["y_position"].asInt();
+                    std::string text = text_data["text"].asString();
 
                     if (text.find("{second}") != std::string::npos)         // if there is a second in the variables, let the clock face know
                         config_clock_face->set_contains_second_variable(true);      // in this scenario we need to update the screen secondly instead of minutely
