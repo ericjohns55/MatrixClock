@@ -90,7 +90,7 @@ The following is the default night time clock face in the program.
             "b": 0
           },
           "font_size": "large_bold",
-		  "x_position": -1,
+	  "x_position": -1,
           "y_position": 35,
           "text": "{hour}:{minute}{ampm}"
         }
