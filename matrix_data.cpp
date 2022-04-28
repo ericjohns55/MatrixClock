@@ -31,7 +31,7 @@ namespace matrix_clock {
         current = empty;       // set it to empty if not found
     }
 
-    void matrix_data::update_clock_face(int hour, int minute) {
+    void matrix_data::update_clock_face(int hour, int minute, int day_of_week) {
         for (size_t index = 0; index < get_clock_face_count(); index++) {   // loop through all clock faces
             // grab the time periods for the current time period
             std::vector<matrix_clock::time_period> time_periods = clock_faces.data()[index]->get_time_periods();
@@ -40,7 +40,8 @@ namespace matrix_clock {
             for (size_t j = 0; j < time_periods.size(); j++) {
                 matrix_clock::time_period current_period = time_periods.data()[j];
 
-                if (current_period.in_time_period(hour, minute)) {  // check if the current time is within this time period
+                // check if the current time is within this time period and on the given day
+                if (current_period.in_time_period(hour, minute, day_of_week)) {
                     current = clock_faces.data()[index];
                     return; // return if found
                 }   // otherwise, loop again until we find it
@@ -150,6 +151,11 @@ namespace matrix_clock {
 
                     // instantiate a new time period and add it to the clock face
                     matrix_clock::time_period clock_face_time_period(start_hour, start_minute, end_hour, end_minute);
+
+                    // loop through the days of the week array and add it to the vector
+                    for (Json::Value::ArrayIndex days_index = 0; days_index != time_data["days_of_week"].size(); days_index++) {
+                        clock_face_time_period.add_day(time_data["days_of_week"][days_index].asInt());
+                    }
 
                     config_clock_face->add_time_period(clock_face_time_period); // add the time frame to the clock face object
                 }

@@ -118,7 +118,7 @@ int main(int argc, char* argv[]) {
     time_util.get_time(times);
 
     // load initial clock face by setting it to the current one in the container
-    clock_data.update_clock_face(times[3], times[1]);
+    clock_data.update_clock_face(times[3], times[1], time_util.get_day_of_week());
 
     matrix_telegram_integration::matrix_telegram telegram_bot(&clock_data, &time_util);
 
@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
                         time_util.poll_weather();
 
                     if (!clock_data.clock_face_overridden())   // grab the interface again in case it changed as long as the face is not currently overridden (interfaces cannot change on a second)
-                        clock_data.update_clock_face(times[3], times[1]);
+                        clock_data.update_clock_face(times[3], times[1], time_util.get_day_of_week());
 
                     if (clock_data.get_bot_token() != "disabled")   // as long as the bot is active, check to see if we need to send a push notification and do so if one is found
                         telegram_bot.check_send_notifications(times[3], times[1], time_util.get_day_of_week());
@@ -187,7 +187,7 @@ int main(int argc, char* argv[]) {
                 }
             } else {
                 clock_data.set_recent_reload(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
-                clock_data.update_clock_face(times[3], times[1]);
+                clock_data.update_clock_face(times[3], times[1], time_util.get_day_of_week());
             }
         }
 

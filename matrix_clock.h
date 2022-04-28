@@ -22,14 +22,22 @@ namespace matrix_clock {
     class time_period {
         private:
             int hour_start, minute_start, hour_end, minute_end;
+            std::vector<int> days;
         public:
             // constructor (hour_start, minute_start, hour_end, minute_end)
             //   creates a time period object with the specified start and end times
             time_period(int, int, int, int);
 
-            // takes in two integers: current hour and current minute
+            // takes in three integers: current hour, current minute, and the day of the week
             //      returns true if the current time is within this time period, false if not
-            bool in_time_period(int, int) const;
+            bool in_time_period(int, int, int) const;
+
+            // add a day to the time period
+            inline void add_day(int day) { days.push_back(day); }
+
+            // return true if the clock face should be active on the day given
+            // day_of_week = the day you want to test
+            inline bool active_today(int day_of_week) const { return std::find(days.begin(), days.end(), day_of_week) != days.end(); }
     };
 
     // enum for colors hardcoded in this project
@@ -376,8 +384,8 @@ namespace matrix_clock {
             // update the clock face to one with the given name
             void update_clock_face(std::string name);
 
-            // update the clock face in the given time
-            void update_clock_face(int hour, int minute);
+            // update the clock face in the given time and day
+            void update_clock_face(int hour, int minute, int day_of_week);
 
             //this loads all the clock faces and other data from the matrix_config.json in the repository
             //you can edit matrix_config.json all you want, as long as valid json and data is submitted than it will load the

@@ -16,7 +16,10 @@ namespace matrix_clock {
         this->minute_end = minute_end;
     }
 
-    bool time_period::in_time_period(int current_hour, int current_minute) const {
+    bool time_period::in_time_period(int current_hour, int current_minute, int day_of_week) const {
+        if (!active_today(day_of_week))     // return false if it this time period cannot exist on the specific day of the week
+            return false;
+
         int time1 = (hour_start * 60) + minute_start;       // convert the start time to the minute of the day
         int time2 = (hour_end * 60) + minute_end + 1440;    // convert the end time to the minute of the day + 1440 in case we cross midnight
         int current_time = (current_hour * 60) + current_minute + 1440;     // convert the current time to the minute of the day + 1440 in case we cross midnight

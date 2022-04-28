@@ -1,3 +1,4 @@
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -76,7 +77,8 @@ The following is the default night time clock face in the program.
           "start_hour": 2,
           "start_minute": 0,
           "end_hour": 8,
-          "end_minute": 0
+          "end_minute": 0,
+          "days_of_week": [ 0, 1, 2, 3, 4, 5, 6 ]
         }
       ],
       "text_lines": [
@@ -141,6 +143,8 @@ The clock face must also have a defined background color. I recommend filling in
 
 #### Time Periods
 Time periods is also an array with four arguments: start_hour, start_minute, end_hour, and end_minute. The hours must be in 24 hour format [0-23], and the minutes must be from [0-60] to function.
+
+Time periods also have an array for the days of the week it is active. This allows you to have a clock face only run on specific days you want it to instead of every day. The array is filled with values raning from 0-6 (meaning Sunday (0) to Saturday (6)).
 
 Every time the clock updates, it will check to see if it hits a new start time for a clock face and swap over to it if necessary.
 

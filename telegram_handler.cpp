@@ -171,7 +171,7 @@ namespace matrix_telegram_integration {
                     int times[4];
                     var_util->get_time(times);
 
-                    container->update_clock_face(times[3], times[1]);   // update the clock face to the one it should be at the current time
+                    container->update_clock_face(times[3], times[1], var_util->get_day_of_week());   // update the clock face to the one it should be at the current time
                     container->set_update_required(true);                   // force update
                     container->set_clock_face_override(false);              // turn off clock face override
                 } else if (query->data == "command_clock_on") {
