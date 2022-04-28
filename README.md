@@ -4,9 +4,12 @@ A clock program written in C++ that runs off of an RGB LED Matrix.
 
 ## Features
 - Uses the [rpi-rgb-led-matrix](https://github.com/hzeller/rpi-rgb-led-matrix) library to easily write to the RGB Matrix
+- Fully customizable with what you when you want text to display to display on the screen (days, time, or both)
 - Configurable JSON file to adjust what you want the display to look like
 - OpenWeatherMap integration to allow displaying weather information
 - Allows different displays at different times of the day
+- Telegram Integration that allows you to load clock faces from your phone, or force update to another display
+- Ability to schedule texts through Telegram for any time of the day
 
 ## Example Images
 Default Clock Face
