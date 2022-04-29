@@ -42,8 +42,19 @@ namespace matrix_telegram_integration {
             matrix_clock::telegram_push* current_notification = *iter;
 
             if (current_notification->is_push_time(hour, minute, day_of_week)) {
+                TgBot::InlineKeyboardMarkup::Ptr message_keyboard(new TgBot::InlineKeyboardMarkup);
+                std::vector<TgBot::InlineKeyboardButton::Ptr> dismiss_button_row;
+
+                TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);
+                dismiss_button->text = "Dismiss";
+                dismiss_button->callbackData = "command_dismiss";
+
+                dismiss_button_row.push_back(dismiss_button);
+                message_keyboard->inlineKeyboard.push_back(dismiss_button_row);
+
                 std::string parsed_message = util->parse_variables(current_notification->get_message());
-                bot->getApi().sendMessage(chat_id, parsed_message);
+
+                bot->getApi().sendMessage(chat_id, parsed_message, false, 0, message_keyboard, "Markdown");
             }
         }
     }
@@ -227,6 +238,8 @@ namespace matrix_telegram_integration {
 
                     // send the build stream to the user
                     bot->getApi().sendMessage(query->message->chat->id, stream.str());
+                } else if (query->data == "command_dismiss") {
+                    bot->getApi().deleteMessage(query->message->chat->id, query->message->messageId);
                 }
             }
         });
