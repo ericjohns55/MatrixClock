@@ -19,7 +19,8 @@
           "start_hour": 9,
           "start_minute": 0,
           "end_hour": 23,
-          "end_minute": 0
+          "end_minute": 0,
+          "days_of_week": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "text_lines": [
@@ -110,13 +111,15 @@
           "start_hour": 23,
           "start_minute": 0,
           "end_hour": 2,
-          "end_minute": 0
+          "end_minute": 0,
+          "days_of_week": [0, 1, 2, 3, 4, 5, 6]
         },
         {
           "start_hour": 8,
           "start_minute": 0,
           "end_hour": 9,
-          "end_minute": 0
+          "end_minute": 0,
+          "days_of_week": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "text_lines": [
@@ -207,7 +210,8 @@
           "start_hour": 2,
           "start_minute": 0,
           "end_hour": 8,
-          "end_minute": 0
+          "end_minute": 0,
+          "days_of_week": [0, 1, 2, 3, 4, 5, 6]
         }
       ],
       "text_lines": [
