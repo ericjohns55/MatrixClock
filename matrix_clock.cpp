@@ -76,9 +76,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;    // kill the program
 
     RGBMatrix::Options defaults;
-    defaults.hardware_mapping = "adafruit-hat";     // these are the most optimized hardware options for my screen
-    defaults.rows = 32;                                 // yours may be different
-    defaults.cols = 128;
+    defaults.hardware_mapping = "adafruit-hat-pwm";     // these are the most optimized hardware options for my screen
+    defaults.rows = 64;                                 // yours may be different
+    defaults.cols = 64;
     defaults.pwm_lsb_nanoseconds = 130;
     defaults.brightness = 50;
     defaults.limit_refresh_rate_hz = 300;               // helps it a little more stable
