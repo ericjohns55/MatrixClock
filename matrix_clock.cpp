@@ -42,13 +42,13 @@ void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* 
 
     for (int i = 0; i < clock_face->get_line_count(); i++) {    // loop through all lines to render
         matrix_clock::text_line current_line = clock_face->get_line(i);  // grab current line from the clock face
-        current_line.parse_variables(util);     // parse the variables into actual data
+        current_line.parse_variables(util, offscreen->width());     // parse the variables into actual data
 
         rgb_matrix::Font font; // convert our font to the font declared in the matrix_library
         font.LoadFont(matrix_clock::matrix_font::get_font_file(font_folder, current_line.get_font().get_font()).c_str());
 
         // draw the text using the color, positionings, and matrix_font size declared on the off screen campus
-        rgb_matrix::DrawText(offscreen, font, current_line.parse_x(), current_line.get_y(),
+        rgb_matrix::DrawText(offscreen, font, current_line.parse_x(offscreen->width()), current_line.get_y(),
                              current_line.get_color(), current_line.get_parsed_text().c_str());
     }
 }
@@ -76,9 +76,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;    // kill the program
 
     RGBMatrix::Options defaults;
-    defaults.hardware_mapping = "adafruit-hat-pwm";     // these are the most optimized hardware options for my screen
-    defaults.rows = 64;                                 // yours may be different
-    defaults.cols = 64;
+    defaults.hardware_mapping = "adafruit-hat";     // these are the most optimized hardware options for my screen
+    defaults.rows = 32;                                 // yours may be different
+    defaults.cols = 128;
     defaults.pwm_lsb_nanoseconds = 130;
     defaults.brightness = 50;
     defaults.limit_refresh_rate_hz = 300;               // helps it a little more stable

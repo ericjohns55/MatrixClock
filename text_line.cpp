@@ -6,8 +6,6 @@
 // Implementation of the text_line class
 //
 
-#define MATRIX_WIDTH 64
-
 #include <string>
 
 #include "matrix_clock.h"
@@ -26,10 +24,14 @@ namespace matrix_clock {
         this->text = text;
     }
 
-    int text_line::parse_x() {
+    int text_line::parse_x(int MATRIX_WIDTH) {
         // if the position is -1, then we want to center
         if (x_pos == -1) {  // calculate using the width minus the (size * matrix_font width) all over 2 for the starting x
             return (MATRIX_WIDTH - (parsed_text.size() * font_size.get_x())) / 2;
+        } else if (x_pos == -21) { // they want to center on the left half of the screen so we changed the width to half and made the same calculation as above
+            return ((MATRIX_WIDTH / 2) - (parsed_text.size() * font_size.get_x())) / 2;
+        }  else if (x_pos == -22) { // center on the right half so we do the same as above but add half of the width
+            return (((MATRIX_WIDTH / 2) - (parsed_text.size() * font_size.get_x())) / 2) + (MATRIX_WIDTH / 2);
         } else {    // they chose their x, make sure everything fits on the page, (check if parsed text size * font_width is greater than the width - start x)
             if (((int) parsed_text.size()) * font_size.get_x() > (MATRIX_WIDTH - x_pos)) {
                 parsed_text = parsed_text.substr(0, (int) ((MATRIX_WIDTH - x_pos) / font_size.get_x()));
@@ -39,7 +41,7 @@ namespace matrix_clock {
         }
     }
 
-    void text_line::parse_variables(matrix_clock::variable_utility* util) {
+    void text_line::parse_variables(matrix_clock::variable_utility* util, int MATRIX_WIDTH) {
         parsed_text = util->parse_variables(text); // parse the variables into the new text
 
         // cut the string down if we know it will not fit on the screen

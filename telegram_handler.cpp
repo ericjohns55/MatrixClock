@@ -45,7 +45,7 @@ namespace matrix_telegram_integration {
                 TgBot::InlineKeyboardMarkup::Ptr message_keyboard(new TgBot::InlineKeyboardMarkup);
                 std::vector<TgBot::InlineKeyboardButton::Ptr> dismiss_button_row;
 
-                TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);
+                TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
                 dismiss_button->text = "Dismiss";
                 dismiss_button->callbackData = "command_dismiss";
 
@@ -54,6 +54,7 @@ namespace matrix_telegram_integration {
 
                 std::string parsed_message = util->parse_variables(current_notification->get_message());
 
+                // set the keyboards title to be the push notification so the dismiss button is under
                 bot->getApi().sendMessage(chat_id, parsed_message, false, 0, message_keyboard, "Markdown");
             }
         }
@@ -66,8 +67,10 @@ namespace matrix_telegram_integration {
 
         // generate inline keyboards for the user
         bot->getEvents().onCommand("buttons", [&bot, &clock_faces_keyboard, &container, &name_array](TgBot::Message::Ptr message) {
-            // delete the /buttons message (this is for cleanliness)
-            bot->getApi().deleteMessage(message->chat->id, message->messageId);
+            // delete the /buttons message (this is for cleanliness in a non group chat (so there are no permission issues))
+            if (message->chat->type == TgBot::Chat::Type::Private) {
+                bot->getApi().deleteMessage(message->chat->id, message->messageId);
+            }
 
             // GENERATING THREE INLINE KEYBOARDS:
             // FIRST KEYBOARD: clock face override

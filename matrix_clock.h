@@ -248,12 +248,13 @@ namespace matrix_clock {
 
             // parse all variables passed into the text object as actual data
             // use the variable_utility to convert these variables into readable data
-            void parse_variables(matrix_clock::variable_utility* util);
+            // also give the matrix width to ensure everything fits on the screen before parsing
+            void parse_variables(matrix_clock::variable_utility* util, int MATRIX_WIDTH);
 
-            // get the current x position of the variable
+            // get the current x position of the variable using the given width of the matrix (int)
             //      if the x position is -1, then it will return an x value that will center the text line on the screen
             //      if the position is NOT -1, then it will return whatever x value was passed in
-            int parse_x(void);
+            int parse_x(int MATRIX_WIDTH);
 
             // get the current color converted to a color that the matrix library can use to draw text
             const rgb_matrix::Color get_color(void) const;
