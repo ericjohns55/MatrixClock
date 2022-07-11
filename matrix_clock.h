@@ -146,7 +146,7 @@ namespace matrix_clock {
                                        "Thursday", "Friday", "Saturday"};
         public:
             // constructor that requires a weather URL from OpenWeatherMap as a string to parse weather data with
-            inline variable_utility(std::string url) { weather_url = url; }
+            variable_utility(std::string url);
 
             // polls the weather URL and updates the weather fields with the new data
             void poll_weather(void);

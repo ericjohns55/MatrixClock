@@ -11,6 +11,7 @@
 #include <thread>
 #include <signal.h>
 #include <iostream>
+#include <jsoncpp/json/json.h>
 
 #include "matrix_clock.h"
 #include "matrix_telegram.h"
@@ -29,6 +30,10 @@ volatile bool interrupt_received = false;
 static void InterruptHandler(int signal) {
     interrupt_received = true;
 }
+
+// loads in matrix default options from the given configuration file
+// values loaded: hardware mapping, rows, cols, chains, parallel displays, brightness, refresh rate limit, and gpio slowdown
+void load_matrix_defaults(string config_file, RGBMatrix::Options* options, rgb_matrix::RuntimeOptions* runtime_options);
 
 // update clock method
 // take in the offscreen canvas to draw to
@@ -75,17 +80,14 @@ int main(int argc, char* argv[]) {
     if (config_file.empty())    // if either file is empty, count on the previous error messages saying what is wrong
         return EXIT_FAILURE;    // kill the program
 
-    RGBMatrix::Options defaults;
-    defaults.hardware_mapping = "adafruit-hat-pwm";     // these are the most optimized hardware options for my screen
-    defaults.rows = 64;                                 // yours may be different
-    defaults.cols = 64;
-    defaults.pwm_lsb_nanoseconds = 130;
-    defaults.brightness = 50;
-    defaults.limit_refresh_rate_hz = 300;               // helps it a little more stable
+    RGBMatrix::Options options;
+    rgb_matrix::RuntimeOptions runtime_options;
 
-    // load more flags from command line that you cannot in the code
-    // for example, i use --led-gpio-slowdown in the program arguments and it pulls in there
-    RGBMatrix *matrix = RGBMatrix::CreateFromFlags(&argc, &argv, &defaults);
+    // load defaults declared in config file
+    load_matrix_defaults(config_file, &options, &runtime_options);
+
+    // create matrix from options declared in config file
+    RGBMatrix *matrix = RGBMatrix::CreateFromOptions(options, runtime_options);
 
     if (matrix == NULL) {   // kill the program if we cannot find the matrix
         cerr << "Could not create matrix" << endl;
@@ -200,4 +202,38 @@ int main(int argc, char* argv[]) {
     delete matrix;
 
     return EXIT_SUCCESS;
+}
+
+void load_matrix_defaults(string config_file, RGBMatrix::Options* options, rgb_matrix::RuntimeOptions* runtime_options) {
+    try {
+        Json::Value jsonData;
+        JSONCPP_STRING error;
+        ifstream file_stream(config_file);  // open the config file
+
+        Json::CharReaderBuilder builder;
+
+        // try to parse into JSON object, return if not
+        if (!parseFromStream(builder, file_stream, &jsonData, &error)) {
+            cout << "Invalid config file provided." << endl << error << endl;
+            return;
+        }
+
+        file_stream.close();
+
+        Json::Value matrix_data = jsonData["matrix_options"];
+
+        // load all defaults into our options and runtime options objects
+        options->hardware_mapping = (new string(matrix_data["hardware_mapping"].asString()))->c_str();
+        options->rows = matrix_data["rows"].asInt();
+        options->cols = matrix_data["cols"].asInt();
+        options->chain_length = matrix_data["chain"].asInt();
+        options->parallel = matrix_data["parallel"].asInt();
+        options->brightness = matrix_data["brightness"].asInt();
+        options->limit_refresh_rate_hz = matrix_data["refresh_rate_limit"].asInt();
+        runtime_options->gpio_slowdown = matrix_data["gpio_slowdown"].asInt();
+    } catch (const Json::Exception& exception) {
+        cerr << endl;
+        cerr << exception.what() << endl;   // print error if we could not load defaults
+        cerr << "--- COULD NOT PARSE CONFIG FILE ---" << endl;
+    }
 }

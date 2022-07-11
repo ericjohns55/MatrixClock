@@ -19,6 +19,24 @@ namespace matrix_clock {
     // callback method for curl command
     std::size_t callback(const char*, std::size_t, std::size_t, std::string*);
 
+    // variable_utility(std::string url)
+    //      constructor to create the variable utility object
+    //      also loads the default placeholder values for the weather
+    //          if on run the application cannot find any weather, it will display ~Error~ for the forecast and 0s for all data
+    //          if the weather cannot be updated otherwise, it will display the most recent information
+    //
+    //      url = an OpenWeatherAPI weather URL to load data from
+    variable_utility::variable_utility(std::string url) {
+        weather_url = url;
+
+        forecast = "N/A";        // default placeholder values, will be shown in case the weather cannot be updated
+        short_forecast = "~Error~";
+        temp = 0;
+        real_feel = 0;
+        wind_speed = 0.0;
+        humidity = 0;
+}
+
     // replace_string(std::string& source, std::string search, std::string replace)
     //      replace all instances of "search" in the source string with "replace"
     //
@@ -73,15 +91,8 @@ namespace matrix_clock {
             } else { // could not parse, something went wrong
                 std::cout << "Could not parse data as JSON." << std::endl << error << std::endl;
             }
-        } else { // unsuccessful, let the user know
-            std::cout << "Could not update weather, loading placeholder values instead." << std::endl;
-
-            forecast = "N/A";        // load placeholder values so the application can still run
-            short_forecast = "~Error~";
-            temp = 0;
-            real_feel = 0;
-            wind_speed = 0.0;
-            humidity = 0;
+        } else { // update unsuccessful, display in console
+            std::cout << "Could not update weather." << std::endl;
         }
     }
 
