@@ -1,5 +1,6 @@
 
 
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -55,12 +56,22 @@ Full example:
 ```
 ./matrix_clock --CONFIG matrix_config.json
 ```
-If you want to add any other [command line arguments embedded within the matrix display's library](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/examples-api-use#running-some-demos) you can also add them before or after the required arguments (NOT in-between)
+If you require different [command line arguments embedded within the matrix display's library](https://github.com/hzeller/rpi-rgb-led-matrix/tree/master/examples-api-use#running-some-demos), you should configure them at the top of matrix_config.json BEFORE running.
 
 ## Configuring matrix_config.json
 The following is the default night time clock face in the program.
 ```
 {
+  "matrix_options": {
+    "hardware_mapping": "adafruit-hat-pwm",
+    "rows": 64,
+    "cols": 64,
+    "chain": 1,
+    "parallel": 1,
+    "brightness": 50,
+    "refresh_rate_limit": 0,
+    "gpio_slowdown": 3
+  },
   "clock_data": {
     "weather_url": "https://api.openweathermap.org/data/2.5/weather?id=LOCATION&appid=API_KEYunits=imperial",
     "bot_token": "XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
@@ -111,8 +122,9 @@ The following is the default night time clock face in the program.
   ]
 }
 ```
+The top section labeled ```matrix_options``` consists of default configuration options for your RGB channel declared in hzeller's library. These settings must be configured at run time, and cannot be changed again without restarting the program.
 
-We can break this down into a few simple ways:
+We can break down the rest into a few simple ways:
 
 ### Clock Data:
 
