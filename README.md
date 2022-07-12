@@ -1,6 +1,3 @@
-
-
-
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -184,9 +181,10 @@ X and Y positions:
 * The Y position represents the location where the BOTTOM of the line of text will be drawn. For example, if you printed out Hello at the position of 32, the bottom left pixel of the H would be at Y 32 and the rest of the text higher up.
 * The X position represents where the line of text will start on the matrix in the horizontal axis.
 	* You can set the X-position to -1 if you want the line of text to be centered (what I most recommend)
-	* You can also set the X-position to -21 if you want to divide the screen in half and center that text on the left half
-	* You could also set the X-position to -22 if you want to divide the screen in half and center that text on the right half
-	* I would recommend the -21 or -22 option if you have a chained display right next to each other and want to divide the screens
+	* You can also set the X-position to a negative double digit number to divide the screen into segments.
+		* The first digit will be the number of evenly spaced sections you want to split the screen into.
+		* The second digit will be which of those sections you want to center the text in.
+		* For example, if you set the X-position to -42, it would divide the screen into 4 evenly spaced sections, and put the text into the second one.
 
 **Text**
 Text is a little more complicated because you most likely want the data printed to be current weather and time information.
