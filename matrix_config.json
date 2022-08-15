@@ -240,6 +240,30 @@
       ]
     }
   ],
+  "timer": {
+    "display_time_while_ended": 30,
+    "blink": false,
+    "bg_color": {
+      "built_in_color": "black",
+      "r": 0,
+      "g": 0,
+      "b": 0
+    },
+    "text_lines": [
+      {
+        "color": {
+          "built_in_color": "red",
+          "r": 0,
+          "g": 0,
+          "b": 0
+        },
+        "font_size": "large_bold",
+        "x_position": -1,
+        "y_position": 20,
+        "text": "{thour}:{tminute}:{tsecond}"
+      }
+    ]
+  },
   "telegram_notifications": [
     {
       "message": "It is currently {temp} degrees outside.",
