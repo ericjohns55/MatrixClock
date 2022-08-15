@@ -147,7 +147,38 @@ namespace matrix_telegram_integration {
 
             bot->getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", false, 0, clock_controls_keyboard, "Markdown");
 
-            // THIRD KEYBOARD: system controls
+            // THIRD KEYBOARD: timer controls
+
+            TgBot::InlineKeyboardMarkup::Ptr timer_controls_keyboard(new TgBot::InlineKeyboardMarkup);
+            std::vector<TgBot::InlineKeyboardButton::Ptr> timer_row1;
+            std::vector<TgBot::InlineKeyboardButton::Ptr> timer_row2;
+
+            TgBot::InlineKeyboardButton::Ptr start_button(new TgBot::InlineKeyboardButton);
+            start_button->text = "Start";
+            start_button->callbackData = "command_timer_start";
+            timer_row1.push_back(start_button);
+
+            TgBot::InlineKeyboardButton::Ptr pause_button(new TgBot::InlineKeyboardButton);
+            pause_button->text = "Pause";
+            pause_button->callbackData = "command_timer_pause";
+            timer_row1.push_back(pause_button);
+
+            TgBot::InlineKeyboardButton::Ptr cancel_button(new TgBot::InlineKeyboardButton);
+            cancel_button->text = "Cancel";
+            cancel_button->callbackData = "command_timer_cancel";
+            timer_row2.push_back(cancel_button);
+
+            TgBot::InlineKeyboardButton::Ptr reset_button(new TgBot::InlineKeyboardButton);
+            reset_button->text = "Reset";
+            reset_button->callbackData = "command_timer_reset";
+            timer_row2.push_back(reset_button);
+
+            timer_controls_keyboard->inlineKeyboard.push_back(timer_row1);
+            timer_controls_keyboard->inlineKeyboard.push_back(timer_row2);
+
+            bot->getApi().sendMessage(message->chat->id, "\U0000231A Timer Controls \U0000231A", false, 0, timer_controls_keyboard, "Markdown");
+
+            // FOURTH KEYBOARD: system controls
 
             TgBot::InlineKeyboardMarkup::Ptr system_controls_keyboard(new TgBot::InlineKeyboardMarkup);
             std::vector<TgBot::InlineKeyboardButton::Ptr> system_row;
@@ -172,6 +203,39 @@ namespace matrix_telegram_integration {
             system_controls_keyboard->inlineKeyboard.push_back(data_row);
 
             bot->getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
+        });
+
+        bot->getEvents().onCommand("timer", [&bot, &var_util] (TgBot::Message::Ptr message) {
+            std::vector<std::string> split = StringTools::split(message->text, ' ');
+
+            if (split.size() >= 3) {
+                int hour = 0, minute, second;
+
+                if (split.size() == 3) {
+                    minute = std::stoi(split[1]);
+                    second = std::stoi(split[2]);
+                } else {
+                    hour = std::stoi(split[1]);
+                    minute = std::stoi(split[2]);
+                    second = std::stoi(split[3]);
+                }
+
+                std::stringstream chat_message;
+                chat_message << "Creating timer for " << hour << ":" << minute << ":" << second << std::endl;
+                bot->getApi().sendMessage(message->chat->id, chat_message.str());
+
+                matrix_clock::matrix_timer* timer = new matrix_clock::matrix_timer(hour, minute, second);
+                var_util->set_timer(timer);
+            } else {
+                bot->getApi().sendMessage(message->chat->id, "Invalid use of command. Proper usage /timer [h] [m] [s] or /timer [m] [s]");
+            }
+        });
+
+        bot->getEvents().onCommand("stopwatch", [&bot, &var_util] (TgBot::Message::Ptr message) {
+            bot->getApi().sendMessage(message->chat->id, "Created a stopwatch, click the start button to start it.");
+
+            matrix_clock::matrix_timer* timer = new matrix_clock::matrix_timer(-2, -2, -2);
+            var_util->set_timer(timer);
         });
 
         // callback query to the inline clock_faces_keyboard
@@ -243,6 +307,29 @@ namespace matrix_telegram_integration {
                     bot->getApi().sendMessage(query->message->chat->id, stream.str());
                 } else if (query->data == "command_dismiss") {
                     bot->getApi().deleteMessage(query->message->chat->id, query->message->messageId);
+                } else if (query->data == "command_timer_start") {
+                    if (var_util->has_timer()) {
+                        var_util->get_timer()->start_timer();       // only start the timer if we have one
+                    } else {
+                        bot->getApi().sendMessage(query->message->chat->id, "There is no timer to start.");
+                    }
+                } else if (query->data == "command_timer_pause") {
+                    if (var_util->has_timer()) {
+                        if (var_util->get_timer()->is_started()) {
+                            var_util->get_timer()->pause();     // pause the timer to stop it from ticking (this is a toggle)
+                        } else {
+                            bot->getApi().sendMessage(query->message->chat->id, "This timer was never started.");
+                        }
+                    } else {
+                        bot->getApi().sendMessage(query->message->chat->id, "There is no timer to pause.");
+                    }
+                } else if (query->data == "command_timer_cancel") {
+                    var_util->get_timer()->end_timer();
+                    var_util->set_timer(new matrix_clock::matrix_timer(-1, 0, 0));  // set to an empty timer
+                    container->set_update_required(true);   // force update to go back to the current clock face
+                } else if (query->data == "command_timer_reset") {
+                    var_util->get_timer()->reset_timer();
+                    container->set_update_required(true);   // force update to display the resetted timer
                 }
             }
         });

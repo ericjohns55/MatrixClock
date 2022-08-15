@@ -39,7 +39,7 @@ void load_matrix_defaults(string config_file, RGBMatrix::Options* options, rgb_m
 // take in the offscreen canvas to draw to
 // the clock_face is the current clock face shown on the screen
 // variable utility is passed in to parse variables against
-void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* clock_face, matrix_clock::variable_utility* util, std::string font_folder) {
+void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* clock_face, matrix_clock::variable_utility* util, std::string font_folder, matrix_clock::matrix_timer* timer_info) {
     offscreen->Clear(); // clear offscreen because it was previously swapped
 
     matrix_clock::matrix_color bg_color = clock_face->get_background_color();
@@ -48,6 +48,9 @@ void update_clock(rgb_matrix::FrameCanvas* offscreen, matrix_clock::clock_face* 
     for (int i = 0; i < clock_face->get_line_count(); i++) {    // loop through all lines to render
         matrix_clock::text_line current_line = clock_face->get_line(i);  // grab current line from the clock face
         current_line.parse_variables(util, offscreen->width());     // parse the variables into actual data
+
+        if (timer_info != nullptr)
+            current_line.parse_variables(util, offscreen->width());
 
         rgb_matrix::Font font; // convert our font to the font declared in the matrix_library
         font.LoadFont(matrix_clock::matrix_font::get_font_file(font_folder, current_line.get_font().get_font()).c_str());
@@ -131,7 +134,7 @@ int main(int argc, char* argv[]) {
     }
 
     // if we do not find a valid clock face for the given time, we will fill with an empty clock face to display nothing on the screen
-    update_clock(offscreen, clock_data.get_current(), &time_util, clock_data.get_fonts_folder());
+    update_clock(offscreen, clock_data.get_current(), &time_util, clock_data.get_fonts_folder(), nullptr);
     offscreen = matrix->SwapOnVSync(offscreen);
 
     // inform console we are starting so there is at least some feedback in console
@@ -170,11 +173,24 @@ int main(int argc, char* argv[]) {
                 //      1) we have a second count displayed on the screen that must update every second
                 //      2) there is no second count, BUT it is a new minute so we have to update anyways
                 //      3) there is a forced update
+                //      4) there is a timer
                 // do not update under ANY OTHER CIRCUMSTANCES
                 // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
-                if (clock_data.get_current()->contains_second_variable() || (!clock_data.get_current()->contains_second_variable() && new_minute) || clock_data.update_required()) {
+                if (clock_data.get_current()->contains_second_variable() || (!clock_data.get_current()->contains_second_variable() && new_minute) || clock_data.update_required() || time_util.has_timer()) {
                     if (clock_data.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
-                        update_clock(offscreen, clock_data.get_current(), &time_util, clock_data.get_fonts_folder()); // update only if the clock is on
+                        if (time_util.has_timer() && time_util.get_timer()->can_tick(clock_data.get_timer_hold())) {    // check if the timer exists and is able to tick (prevents it from being stuck when it ends)
+                            if (time_util.get_timer()->is_started())
+                                time_util.get_timer()->tick(clock_data.get_timer_hold());       // tick only if the timer is started
+
+                            if (time_util.get_timer()->in_hold_period() && clock_data.can_blink() && new_second % 2 == 0) { // set to empty face if the timer is has ended and is supposed to blink
+                                update_clock(offscreen, clock_data.get_empty_face(), &time_util, clock_data.get_fonts_folder(), time_util.get_timer());
+                            } else {
+                                update_clock(offscreen, clock_data.get_timer_face(), &time_util, clock_data.get_fonts_folder(), time_util.get_timer()); // update with the current time on the timer
+                            }
+                        } else {
+                            update_clock(offscreen, clock_data.get_current(), &time_util, clock_data.get_fonts_folder(), nullptr); // update only if the clock is on
+                        }
+
                         offscreen = matrix->SwapOnVSync(offscreen);
                     }
 

@@ -35,6 +35,8 @@ namespace matrix_clock {
         real_feel = 0;
         wind_speed = 0.0;
         humidity = 0;
+
+        timer = new matrix_timer(-1, 0, 0);
 }
 
     // replace_string(std::string& source, std::string search, std::string replace)
@@ -136,6 +138,18 @@ namespace matrix_clock {
         replace_string(parsed_text, "{month_day}", std::to_string(get_day_of_month()));
         replace_string(parsed_text, "{week_day_num}", std::to_string(get_day_of_week()));
         replace_string(parsed_text, "{year}", std::to_string(get_year()));
+
+        // replace variables related to the timer embedded within the class
+        replace_string(parsed_text, "{thour}", std::to_string(timer->get_hour()));
+
+        if (timer->get_hour() != 0)     // if the hour isnt 0, that means the timer is greater than an hour so we want to pad the numbers
+            replace_string(parsed_text, "{tminute}", pad_numbers(timer->get_minute()));
+        else        // otherwise its likely under an hour, we do not need an extra 0 before the number
+            replace_string(parsed_text, "{tminute}", std::to_string(timer->get_minute()));
+
+        replace_string(parsed_text, "{tsecond}", pad_numbers(timer->get_second()));
+
+        replace_string(parsed_text, "{ftimer}", timer->format_timer());
 
         // for wind speed, we are truncating to 1 decimal place for easier readability (nobody cares how exact it is)
         std::string wind = std::to_string(get_wind_speed());

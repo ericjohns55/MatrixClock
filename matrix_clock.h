@@ -124,6 +124,68 @@ namespace matrix_clock {
             static std::string get_font_file(std::string font_folder, std::string font_size);
     };
 
+    // matrix_timer class
+    //      Stores information for a timer embedded in the matrix
+    class matrix_timer {
+        private:
+            int hour, minute, second;
+            int tick_num;
+            bool started = false;
+            bool paused = false;
+            bool stopwatch = false;
+            int hold_ending = 0;
+            int original_hour, original_minute, original_second;
+
+            // calculates the current hour, minute, and second depending on the tick of the clock
+            void calculate_current_time(void);
+        public:
+            // instantiates a default countdown timer of 0 seconds
+            inline matrix_timer() { hour = minute = second = 0; }
+
+            // default constructor - instantiates a timer
+            // set all values to -2 to create a stopwatch timer
+            matrix_timer(int hour, int minute, int second);
+
+            // represents one second for the timer in the program
+            void tick(int hold_max);
+
+            // stops the timer
+            void end_timer(void);
+
+            // format the timer into a nice string
+            std::string format_timer(void);
+
+            // check if we can do another tick before performing it
+            bool can_tick(int hold_max) const;
+
+            // reset the timer to its original settings
+            void reset_timer(void);
+
+            // starts the timer
+            inline void start_timer(void) { started = true; }
+
+            // pauses or unpauses the timer
+            inline void pause(void) { paused = !paused; }
+
+            // returns true if we are in the holding period (the timer has ended and we are displaying the finished timer on screen)
+            inline bool in_hold_period(void) const { return hold_ending > 0; }
+
+            // returns true if the timer has started, false otherwise
+            inline bool is_started(void) const { return started; }
+
+            // returns true if the timer is a stopwatch instance, false if not
+            inline bool is_stopwatch(void) const { return stopwatch; }
+
+            // returns the hour the timer is currently on
+            inline int get_hour(void) const { return hour; }
+
+            // returns the minute the timer is currently on
+            inline int get_minute(void) const { return minute; }
+
+            // returns the second the timer is currently on
+            inline int get_second(void) const { return second; }
+    };
+
     // variable_utility class
     //      A helper class that reads weather data from the web and time/date information from the system
     class variable_utility {
@@ -134,7 +196,7 @@ namespace matrix_clock {
             std::string short_forecast, forecast;
             std::string formatted_date, month_name, day_name;
             int month_num, day_of_month, day_of_week, year;
-            // time variables not necessary
+            matrix_timer* timer;
 
             // returns the time construct that helps us gather date and time data
             std::tm* get_tm();
@@ -223,6 +285,15 @@ namespace matrix_clock {
             // returns the current year
             //      poll_date() must be called before this is usable
             inline int get_year(void) const { return year; }
+
+            // returns the timer object embedded in the variable utility
+            inline matrix_timer* get_timer(void) const { return timer; }
+
+            // returns true if the object has a timer, false otherwise
+            inline bool has_timer(void) const { return timer->get_hour() != -1; }
+
+            // sets the timer embedded in the object
+            inline void set_timer(matrix_timer* new_timer) { timer = new_timer; }
 
             // manually set the weather URL
             // only use this after reloading clock data via a telegram bot
@@ -357,6 +428,7 @@ namespace matrix_clock {
             std::vector<telegram_push*> push_notifications;
             clock_face* current;
             clock_face* empty;
+            clock_face* timer_face;
             std::string config_file;
             std::string weather_url;
             std::string bot_token;
@@ -366,6 +438,8 @@ namespace matrix_clock {
             bool override_interface;
             bool force_update;
             bool clock_on;
+            int timer_hold;
+            bool timer_blink;
         public:
             // default constructor, instantiates an empty container
             matrix_data(std::string config_file);
@@ -444,6 +518,27 @@ namespace matrix_clock {
 
             // check whether the config was recently reloaded
             inline void set_recent_reload(bool reloaded)  { config_recently_reloaded = reloaded; }
+
+            // adds the timer clock face
+            inline void set_timer_face(clock_face* new_timer_face) { timer_face = new_timer_face; }
+
+            // returns the clock face for the timer
+            inline clock_face* get_timer_face(void) { return timer_face; }
+
+            // returns the length of time the timer will stay on the screen once it ends
+            inline int get_timer_hold(void) const { return timer_hold; }
+
+            // sets the length of time the timer will stay on the screen once it ends
+            inline void set_timer_hold(int new_hold) { timer_hold = new_hold; }
+
+            // returns true if the timer should blink once its complete
+            inline bool can_blink(void) const { return timer_blink; }
+
+            // sets whether the timer should blink once its complete
+            inline void set_timer_blink(bool new_blink) { timer_blink = new_blink; }
+
+            // returns an empty clock face
+            inline clock_face* get_empty_face(void) const { return empty; }
     };
 }
 

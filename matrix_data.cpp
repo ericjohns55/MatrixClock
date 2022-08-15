@@ -17,6 +17,8 @@ namespace matrix_clock {
         override_interface = false;
         force_update = false;
         clock_on = true;
+        timer_hold = 300;
+        timer_blink = false;
         this->config_file = config_file;
     }
 
@@ -192,6 +194,60 @@ namespace matrix_clock {
 
                 add_clock_face(config_clock_face);        // add the clock face to the container
             }
+
+            // time to load all the timer data
+            Json::Value timer_data = jsonData["timer"];
+
+            set_timer_hold(timer_data["display_time_while_ended"].asInt());
+            set_timer_blink(timer_data["blink"].asBool());
+
+            matrix_clock::matrix_color bg_color;
+
+            if (timer_data["bg_color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
+                int red = timer_data["bg_color"]["r"].asInt();
+                int green = timer_data["bg_color"]["g"].asInt();
+                int blue = timer_data["bg_color"]["b"].asInt();
+
+                bg_color = matrix_clock::matrix_color(red, green, blue);
+            } else {                                                            // a prebuilt color is used, read it in from string
+                std::string prebuilt_color_name = timer_data["bg_color"]["built_in_color"].asString();
+                bg_color = matrix_clock::matrix_color(prebuilt_color_name);
+            }
+
+            // create the timer clock face
+
+            matrix_clock::clock_face* clock_timer_face = new matrix_clock::clock_face("timer", bg_color);
+
+            for (Json::Value::ArrayIndex text_index = 0; text_index != timer_data["text_lines"].size(); text_index++) {
+                Json::Value text_data = timer_data["text_lines"][text_index];
+
+                matrix_clock::matrix_color color;       // color variable that will be filled in a minute
+
+                if (text_data["color"]["built_in_color"].asString() == "none") {    // if a prebuilt color is NOT USED (denoted "none" in config), load in RGB values
+                    int red = text_data["color"]["r"].asInt();
+                    int green = text_data["color"]["g"].asInt();
+                    int blue = text_data["color"]["b"].asInt();
+
+                    color = matrix_clock::matrix_color(red, green, blue);
+                } else {                                                            // a prebuilt color is used, read it in from string
+                    std::string prebuilt_color_name = text_data["color"]["built_in_color"].asString();
+                    color = matrix_clock::matrix_color(prebuilt_color_name);
+                }
+
+                matrix_clock::matrix_font font_size(fonts_folder, text_data["font_size"].asString()); // grab matrix_font size, positioning, and text
+                int x_pos = text_data["x_position"].asInt();
+                int y_pos = text_data["y_position"].asInt();
+                std::string text = text_data["text"].asString();
+
+                if (text.find("{second}") != std::string::npos || text.find("{tsecond}") != std::string::npos)         // if there is a second in the variables, let the clock face know
+                    clock_timer_face->set_contains_second_variable(true);      // in this scenario we need to update the screen secondly instead of minutely
+
+                matrix_clock::text_line clock_face_text_line(color, font_size, x_pos, y_pos, text); // instantiate the text line object
+
+                clock_timer_face->add_text(clock_face_text_line);      // add the text line to the current clock face
+            }
+
+            set_timer_face(clock_timer_face);        // add the clock face to the container
 
             // now we are going to read the telegram notifications box from the config file
             Json::Value notifications = jsonData["telegram_notifications"];
