@@ -1,3 +1,4 @@
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -109,6 +110,30 @@ The following is the default night time clock face in the program.
       ]
     }
   ],
+  "timer": {  
+    "display_time_while_ended": 30,  
+    "blink": false,  
+    "bg_color": {  
+      "built_in_color": "black",  
+      "r": 0,  
+      "g": 0,  
+      "b": 0  
+    },  
+    "text_lines": [  
+      {  
+        "color": {  
+          "built_in_color": "red",  
+          "r": 0,  
+          "g": 0,  
+          "b": 0  
+        },  
+        "font_size": "large_bold",  
+        "x_position": -1,  
+        "y_position": 20,  
+        "text": "{thour}:{tminute}:{tsecond}"  
+      }  
+    ]  
+  },
   "telegram_notifications": [
     {
       "message": "It is currently {temp} degrees outside.",
@@ -210,12 +235,26 @@ Here is a list of the current variables:
 | {month_day}   | the day of the month|
 | {week_day_num}   | the day of the week (where 0 is sunday, 1 is monday, etc)|
 | {year}   | the current year|
+| {thour}   | the timer's current hour|
+| {tminute}   | the timer's current minute|
+| {tsecond}   | the timer's current second|
 
 To use any of these variables, put them into the text field in the JSON file and they will update with the clock. You can also mix any form of constant text with a variable (for example: "{temp_feel}F" could put out "42F". If you are not interested in using any variables, constant text will still work perfectly fine.
 
 There are multiple clock faces with different text, colors, and time periods in the default matrix_config.json, you can look to that for more examples.
 
 After changing the configuration file, restart the program and it will immediately grab the data from it, no rebuilding the project necessary.
+
+### Timer
+A timer in the program is something that either counts down or counts up. You can create a timer in the telegram bot using the command ```/timer {hour} {minute} {second}``` or ```/timer {minute} {second}``` (if you do not need an hour field). You can also use ```/stopwatch``` to create a timer that counts up from 0. Once you create a timer, you must click the "Start" button in the Telegram inline keyboard for it to start counting.
+
+The timer setting has two options, then the rest is configured as if it is a normal clock face.
+
+#### Display Time While Ended
+How long the timer will stay on the screen once it ended (not eligible for the /stopwatch command.
+
+#### Blink
+This determines whether the timer field should blink when the timer ends or not. It blinks for one second on and one second off. You can set it to true for it to blink, or false for it to not.
 
 ### Telegram Notifications:
 
@@ -245,7 +284,7 @@ Once the bot is up and running, use the */buttons* command to generate the butto
 
 An example of what the telegram interface looks like is below:
 
-<img src="images/telegram.png" width="400" height="584">
+<img src="images/telegram.png" width="400" height="675">
 
 ### What each button does:
 **Clock Interfaces**: The three example buttons "Day", "Dusk", and "Night" represent the three default clock faces that are included in matrix_config.json. If you rename or configure different clock faces in your version of the clock then run the /buttons command, then this will swap those names out with your clock faces.
