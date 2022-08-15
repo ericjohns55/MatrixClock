@@ -284,7 +284,7 @@ Once the bot is up and running, use the */buttons* command to generate the butto
 
 An example of what the telegram interface looks like is below:
 
-<img src="images/telegram.png" width="400" height="675">
+<img src="images/telegram_interface.png" width="400" height="675">
 
 ### What each button does:
 **Clock Interfaces**: The three example buttons "Day", "Dusk", and "Night" represent the three default clock faces that are included in matrix_config.json. If you rename or configure different clock faces in your version of the clock then run the /buttons command, then this will swap those names out with your clock faces.
