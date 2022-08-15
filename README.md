@@ -238,6 +238,7 @@ Here is a list of the current variables:
 | {thour}   | the timer's current hour|
 | {tminute}   | the timer's current minute|
 | {tsecond}   | the timer's current second|
+| {ftimer}   | a formatted string of the timer's current state|
 
 To use any of these variables, put them into the text field in the JSON file and they will update with the clock. You can also mix any form of constant text with a variable (for example: "{temp_feel}F" could put out "42F". If you are not interested in using any variables, constant text will still work perfectly fine.
 
