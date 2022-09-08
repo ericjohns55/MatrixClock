@@ -1,5 +1,9 @@
+// Matrix Clock
+// Created by Eric Johns (ericjohns55)
+// https://github.com/ericjohns55/MatrixClock
 //
-// Created by Eric on 4/23/2022.
+// matrix_telegram.h
+//      Holds the driver class for the Telegram integration
 //
 
 #ifndef MATRIXCLOCK_MATRIX_TELEGRAM_H
@@ -30,6 +34,12 @@ namespace matrix_telegram_integration {
             // sends a telegram push notification declared in the matrix config
             // hour = current hour; minute = current minute; day_of_week = the current day of week (sunday = 0)
             void check_send_notifications(int hour, int minute, int day_of_week);
+
+            // returns the instance of the current telegram bot
+            // requires enable_bot() to have been called
+            // if dismiss_button is true, it will return the message with a dismiss button
+            //      otherwise it will send as a normal message
+            void send_message(std::string message, bool dismiss_button) const;
     };
 }
 

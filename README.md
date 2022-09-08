@@ -1,4 +1,5 @@
 
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -30,6 +31,7 @@ Night Time Clock Face
 - [jsoncpp](https://github.com/open-source-parsers/jsoncpp)
 - [libcurl](https://curl.se/libcurl/)
 - [tgbot-cpp](https://github.com/reo7sp/tgbot-cpp/)
+- [wiringPi](https://github.com/WiringPi/WiringPi)
 
 ### Required Weather Portion:
 1) Generate an API key from [OpenWeatherMap](https://openweathermap.org/)
@@ -113,6 +115,8 @@ The following is the default night time clock face in the program.
   "timer": {  
     "display_time_while_ended": 30,  
     "blink": false,  
+    "buzzer_pin": -1,
+    "notify_on_complete": false,
     "bg_color": {  
       "built_in_color": "black",  
       "r": 0,  
@@ -256,6 +260,12 @@ How long the timer will stay on the screen once it ended (not eligible for the /
 
 #### Blink
 This determines whether the timer field should blink when the timer ends or not. It blinks for one second on and one second off. You can set it to true for it to blink, or false for it to not.
+
+#### Buzzer Pin
+This lets you declare a [BCM](https://pinout.xyz/) that will flicker between HIGH and LOW when a timer is completed. I connected a buzzer to pin 19 (as 19 is one of the [unused pins on Adafruit's Matrix Hat](https://learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi/pinouts)), but you can connect any sensor you would like. If you do not want to use a buzzer, set the value to -1.
+
+#### Notify on Complete
+If you set this to true it will send a push notification to telegram when your timer finishes. If you set it to face then there will be no notification.
 
 ### Telegram Notifications:
 

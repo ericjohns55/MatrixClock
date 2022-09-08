@@ -147,7 +147,11 @@ namespace matrix_clock {
             matrix_timer(int hour, int minute, int second);
 
             // represents one second for the timer in the program
-            void tick(int hold_max);
+            // returns the current tick in the timer
+            //      will be positive if it is still ticking
+            //      will be 0 if it just finished ticking
+            //      will be negative if it is in the hold period
+            int tick(int hold_max);
 
             // stops the timer
             void end_timer(void);
@@ -438,8 +442,10 @@ namespace matrix_clock {
             bool override_interface;
             bool force_update;
             bool clock_on;
+            bool timer_notify_on_complete;
             int timer_hold;
             bool timer_blink;
+            int buzzer_pin;
         public:
             // default constructor, instantiates an empty container
             matrix_data(std::string config_file);
@@ -539,6 +545,18 @@ namespace matrix_clock {
 
             // returns an empty clock face
             inline clock_face* get_empty_face(void) const { return empty; }
+
+            // get the (BCM) pin for the buzzer sensor
+            inline int get_buzzer_pin(void) const { return buzzer_pin; }
+
+            // set the (BCM) pin for the buzzer sensor
+            void set_buzzer_pin(int pin);
+
+            // sets whether the telegram integration should send a push notification when the timer completes
+            inline void set_notify_on_complete(bool flag) { timer_notify_on_complete = flag; }
+
+            // returns true if the bot should send a notification when the timer completes, false otherwise
+            inline bool get_notify_on_timer_completion(void) const { return timer_notify_on_complete; }
     };
 }
 

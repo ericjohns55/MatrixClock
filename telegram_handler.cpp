@@ -9,6 +9,7 @@
 #include <string>
 #include <thread>
 #include <sstream>
+#include <wiringPi.h>
 #include "matrix_telegram.h"
 
 namespace matrix_telegram_integration {
@@ -20,6 +21,13 @@ namespace matrix_telegram_integration {
     //      container = the clock face container that contains all valid clock faces
     //      var_util = the var util used throughout the program to poll for new data
     void bot_handler(TgBot::Bot* bot, matrix_clock::matrix_data* container, matrix_clock::variable_utility* var_util);
+
+    // returns the timer control board for the /timer and /stopwatch commands
+    TgBot::InlineKeyboardMarkup::Ptr get_timer_controls(void);
+
+    // sends a message to the defined chat_id with an inline keyboard containing
+    // a single dismiss button that will delete the message in chat
+    void send_dismiss_keyboard(std::string message, TgBot::Bot* bot, std::int64_t chat_id);
 
     matrix_telegram::matrix_telegram(matrix_clock::matrix_data* data, matrix_clock::variable_utility* var_util) {
         matrixData = data;   // load required pointers and the API key for manipulation by the bot
@@ -34,6 +42,14 @@ namespace matrix_telegram_integration {
         poll_bot.detach();  // detach so the thread does not die when we leave the method scope
     }
 
+    void matrix_telegram::send_message(std::string message, bool dismiss_button) const {
+        if (!dismiss_button) {
+            bot->getApi().sendMessage(chat_id, message);
+        } else {
+            send_dismiss_keyboard(message, bot, chat_id);
+        }
+    }
+
     void matrix_telegram::check_send_notifications(int hour, int minute, int day_of_week) {
         std::vector<matrix_clock::telegram_push*> notifications = matrixData->get_notifications();
         std::vector<matrix_clock::telegram_push*>::iterator iter;
@@ -42,20 +58,7 @@ namespace matrix_telegram_integration {
             matrix_clock::telegram_push* current_notification = *iter;
 
             if (current_notification->is_push_time(hour, minute, day_of_week)) {
-                TgBot::InlineKeyboardMarkup::Ptr message_keyboard(new TgBot::InlineKeyboardMarkup);
-                std::vector<TgBot::InlineKeyboardButton::Ptr> dismiss_button_row;
-
-                TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
-                dismiss_button->text = "Dismiss";
-                dismiss_button->callbackData = "command_dismiss";
-
-                dismiss_button_row.push_back(dismiss_button);
-                message_keyboard->inlineKeyboard.push_back(dismiss_button_row);
-
-                std::string parsed_message = util->parse_variables(current_notification->get_message());
-
-                // set the keyboards title to be the push notification so the dismiss button is under
-                bot->getApi().sendMessage(chat_id, parsed_message, false, 0, message_keyboard, "Markdown");
+                send_dismiss_keyboard(util->parse_variables(current_notification->get_message()), bot, chat_id);
             }
         }
     }
@@ -206,6 +209,10 @@ namespace matrix_telegram_integration {
         });
 
         bot->getEvents().onCommand("timer", [&bot, &var_util] (TgBot::Message::Ptr message) {
+            if (message->chat->type == TgBot::Chat::Type::Private) {
+                bot->getApi().deleteMessage(message->chat->id, message->messageId);
+            }
+
             std::vector<std::string> split = StringTools::split(message->text, ' ');
 
             if (split.size() >= 3) {
@@ -220,19 +227,51 @@ namespace matrix_telegram_integration {
                     second = std::stoi(split[3]);
                 }
 
-                std::stringstream chat_message;
-                chat_message << "Creating timer for " << hour << ":" << minute << ":" << second << std::endl;
-                bot->getApi().sendMessage(message->chat->id, chat_message.str());
-
                 matrix_clock::matrix_timer* timer = new matrix_clock::matrix_timer(hour, minute, second);
                 var_util->set_timer(timer);
+
+                TgBot::InlineKeyboardMarkup::Ptr timer_controls_keyboard(new TgBot::InlineKeyboardMarkup);
+                std::vector<TgBot::InlineKeyboardButton::Ptr> timer_row;
+
+                TgBot::InlineKeyboardButton::Ptr start_button(new TgBot::InlineKeyboardButton);
+                start_button->text = "Start";
+                start_button->callbackData = "command_timer_start";
+                timer_row.push_back(start_button);
+
+                TgBot::InlineKeyboardButton::Ptr cancel_button(new TgBot::InlineKeyboardButton);
+                cancel_button->text = "Cancel";
+                cancel_button->callbackData = "command_timer_cancel";
+                timer_row.push_back(cancel_button);
+
+                TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
+                dismiss_button->text = "Dismiss";
+                dismiss_button->callbackData = "command_dismiss";
+                timer_row.push_back(dismiss_button);
+
+                timer_controls_keyboard->inlineKeyboard.push_back(timer_row);
+
+                std::stringstream timer_info;
+                timer_info << "Created a timer for ";
+
+                if (hour != 0) timer_info << hour << " hour(s) ";
+                if ((hour != 0 && minute != 0) || (hour != 0 && second != 0)) timer_info << "and ";
+                if (minute != 0) timer_info << minute << " minute(s) ";
+                if (minute != 0 && second != 0) timer_info << "and ";
+                if (second != 0) timer_info << second << " second(s).";
+
+                // send the user information about the timer they created as well as timer controls again
+                bot->getApi().sendMessage(message->chat->id, timer_info.str(), false, 0, get_timer_controls(), "Markdown");
             } else {
                 bot->getApi().sendMessage(message->chat->id, "Invalid use of command. Proper usage /timer [h] [m] [s] or /timer [m] [s]");
             }
         });
 
         bot->getEvents().onCommand("stopwatch", [&bot, &var_util] (TgBot::Message::Ptr message) {
-            bot->getApi().sendMessage(message->chat->id, "Created a stopwatch, click the start button to start it.");
+            if (message->chat->type == TgBot::Chat::Type::Private) {
+                bot->getApi().deleteMessage(message->chat->id, message->messageId);
+            }
+
+            bot->getApi().sendMessage(message->chat->id, "Created a stopwatch.", false, 0, get_timer_controls(), "Markdown");
 
             matrix_clock::matrix_timer* timer = new matrix_clock::matrix_timer(-2, -2, -2);
             var_util->set_timer(timer);
@@ -265,17 +304,18 @@ namespace matrix_telegram_integration {
                     var_util->poll_date();
                     container->set_update_required(true);
                 } else if (query->data == "command_ping") {
-                    bot->getApi().sendMessage(query->message->chat->id, "Bot is working correctly!");
+                    send_dismiss_keyboard("Bot is working correctly!", bot, query->message->chat->id);
                 } else if (query->data == "command_reload_config") {
                     container->set_recent_reload(true); // set recent reload so we skip an update second
                     container->load_clock_data();
                     var_util->set_weather_url(container->get_weather_url());    // update the weather URL in case it changed and poll weather again
                     var_util->poll_weather();
                     container->set_update_required(true);       // force update
+                    send_dismiss_keyboard("Successfully reloaded matrix config.", bot, query->message->chat->id);
                 } else if (query->data == "command_chatid") {
                     std::stringstream stream;
                     stream << "Chat ID: " << query->message->chat->id;
-                    bot->getApi().sendMessage(query->message->chat->id, stream.str());
+                    send_dismiss_keyboard(stream.str(), bot, query->message->chat->id);
                 } else if (query->data == "command_print_data") {
                     int times[4];
                     var_util->get_time(times);
@@ -304,32 +344,35 @@ namespace matrix_telegram_integration {
                     }
 
                     // send the build stream to the user
-                    bot->getApi().sendMessage(query->message->chat->id, stream.str());
+                    send_dismiss_keyboard(stream.str(), bot, query->message->chat->id);
                 } else if (query->data == "command_dismiss") {
                     bot->getApi().deleteMessage(query->message->chat->id, query->message->messageId);
                 } else if (query->data == "command_timer_start") {
                     if (var_util->has_timer()) {
                         var_util->get_timer()->start_timer();       // only start the timer if we have one
                     } else {
-                        bot->getApi().sendMessage(query->message->chat->id, "There is no timer to start.");
+                        send_dismiss_keyboard("There is no timer to start.", bot, query->message->chat->id);
                     }
                 } else if (query->data == "command_timer_pause") {
                     if (var_util->has_timer()) {
                         if (var_util->get_timer()->is_started()) {
                             var_util->get_timer()->pause();     // pause the timer to stop it from ticking (this is a toggle)
+                            digitalWrite(container->get_buzzer_pin(), LOW);
                         } else {
-                            bot->getApi().sendMessage(query->message->chat->id, "This timer was never started.");
+                            send_dismiss_keyboard("This timer was never started.", bot, query->message->chat->id);
                         }
                     } else {
-                        bot->getApi().sendMessage(query->message->chat->id, "There is no timer to pause.");
+                        send_dismiss_keyboard("There is no timer to pause.", bot, query->message->chat->id);
                     }
                 } else if (query->data == "command_timer_cancel") {
                     var_util->get_timer()->end_timer();
                     var_util->set_timer(new matrix_clock::matrix_timer(-1, 0, 0));  // set to an empty timer
                     container->set_update_required(true);   // force update to go back to the current clock face
+                    digitalWrite(container->get_buzzer_pin(), LOW);   // turn off buzzer in case it was on
                 } else if (query->data == "command_timer_reset") {
                     var_util->get_timer()->reset_timer();
                     container->set_update_required(true);   // force update to display the resetted timer
+                    digitalWrite(container->get_buzzer_pin(), LOW);
                 }
             }
         });
@@ -350,5 +393,44 @@ namespace matrix_telegram_integration {
                 }
             }
         }
+    }
+
+    void send_dismiss_keyboard(std::string message, TgBot::Bot* bot, std::int64_t chat_id) {
+        TgBot::InlineKeyboardMarkup::Ptr message_keyboard(new TgBot::InlineKeyboardMarkup);
+        std::vector<TgBot::InlineKeyboardButton::Ptr> dismiss_button_row;
+
+        TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
+        dismiss_button->text = "Dismiss";
+        dismiss_button->callbackData = "command_dismiss";
+
+        dismiss_button_row.push_back(dismiss_button);
+        message_keyboard->inlineKeyboard.push_back(dismiss_button_row);
+
+        // set the keyboards title to be the push notification so the dismiss button is under
+        bot->getApi().sendMessage(chat_id, message, false, 0, message_keyboard, "Markdown");
+    }
+
+    TgBot::InlineKeyboardMarkup::Ptr get_timer_controls(void) {
+        TgBot::InlineKeyboardMarkup::Ptr timer_controls_keyboard(new TgBot::InlineKeyboardMarkup);
+        std::vector<TgBot::InlineKeyboardButton::Ptr> timer_row;
+
+        TgBot::InlineKeyboardButton::Ptr start_button(new TgBot::InlineKeyboardButton);
+        start_button->text = "Start";
+        start_button->callbackData = "command_timer_start";
+        timer_row.push_back(start_button);
+
+        TgBot::InlineKeyboardButton::Ptr cancel_button(new TgBot::InlineKeyboardButton);
+        cancel_button->text = "Cancel";
+        cancel_button->callbackData = "command_timer_cancel";
+        timer_row.push_back(cancel_button);
+
+        TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
+        dismiss_button->text = "Dismiss";
+        dismiss_button->callbackData = "command_dismiss";
+        timer_row.push_back(dismiss_button);
+
+        timer_controls_keyboard->inlineKeyboard.push_back(timer_row);
+
+        return timer_controls_keyboard;
     }
 }

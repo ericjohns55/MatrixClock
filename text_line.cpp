@@ -47,7 +47,7 @@ namespace matrix_clock {
         parsed_text = util->parse_variables(text); // parse the variables into the new text
 
         // cut the string down if we know it will not fit on the screen
-        if (parsed_text.size() * font_size.get_x() > MATRIX_WIDTH) { // do same thing as we did in parse_x(), make sure all text can fit on the screen and truncate what does not
+        if (((int) parsed_text.size()) * font_size.get_x() > MATRIX_WIDTH) { // do same thing as we did in parse_x(), make sure all text can fit on the screen and truncate what does not
             parsed_text = parsed_text.substr(0, (int) MATRIX_WIDTH / font_size.get_x());
         }
     }

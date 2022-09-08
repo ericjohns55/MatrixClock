@@ -32,9 +32,9 @@ namespace matrix_clock {
         hold_ending = 0;        // timer has not ended, make sure hold is 0
     }
 
-    void matrix_timer::tick(int hold_max) {
+    int matrix_timer::tick(int hold_max) {
         if (paused)
-            return; // do not tick a paused timer
+            return tick_num; // do not tick a paused timer
 
         if (started) {  // make sure we only tick the timer if it has been started
             if (!stopwatch) {
@@ -52,7 +52,11 @@ namespace matrix_clock {
 
         if (hold_ending >= hold_max) {
             end_timer();    // end the timer if we exceed the holding period
+            return hold_ending;   // the hold period just ended, return false as well
         }
+
+        // return the tick num if we are still actively ticking AND not in the hold period, otherwise return the hold ending as a negative (negative means it is in the hold period)
+        return (tick_num >= 0 && hold_ending < 1) ? tick_num : hold_ending * -1;
     }
 
     bool matrix_timer::can_tick(int hold_max) const {

@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <iostream>
 #include <jsoncpp/json/json.h>
+#include <wiringPi.h>
 
 #include "matrix_clock.h"
 #include "matrix_telegram.h"
@@ -83,6 +84,9 @@ int main(int argc, char* argv[]) {
     if (config_file.empty())    // if either file is empty, count on the previous error messages saying what is wrong
         return EXIT_FAILURE;    // kill the program
 
+    // setup GPIO pins for the buzzer sensor
+    wiringPiSetupGpio();
+
     RGBMatrix::Options options;
     rgb_matrix::RuntimeOptions runtime_options;
 
@@ -143,6 +147,9 @@ int main(int argc, char* argv[]) {
     // declare the previous second
     int previous_second = times[2];
 
+    // on/off boolean for the state of the timer when it ends (whether to blink or buzz)
+    bool timer_notify = false;
+
     while (!interrupt_received) { // loop until the program is killed
         time_util.get_time(times);  // update our times variable
 
@@ -178,17 +185,41 @@ int main(int argc, char* argv[]) {
                 // in terms of the forced update above, this should not run a second time in the same loop unless it is somehow pressed at a new minute
                 if (clock_data.get_current()->contains_second_variable() || (!clock_data.get_current()->contains_second_variable() && new_minute) || clock_data.update_required() || time_util.has_timer()) {
                     if (clock_data.is_clock_on()) {    // we check this here because we still want to update the interfaces and weather so it is accurate if the clock was off and turned back on
-                        if (time_util.has_timer() && time_util.get_timer()->can_tick(clock_data.get_timer_hold())) {    // check if the timer exists and is able to tick (prevents it from being stuck when it ends)
-                            if (time_util.get_timer()->is_started())
-                                time_util.get_timer()->tick(clock_data.get_timer_hold());       // tick only if the timer is started
+                        if (time_util.has_timer() && time_util.get_timer()->can_tick(clock_data.get_timer_hold())) {    // update timer info as long as we can tick further (not past our hold period and started)
+                            matrix_clock::matrix_timer* timer = time_util.get_timer();
 
-                            if (time_util.get_timer()->in_hold_period() && clock_data.can_blink() && new_second % 2 == 0) { // set to empty face if the timer is has ended and is supposed to blink
-                                update_clock(offscreen, clock_data.get_empty_face(), &time_util, clock_data.get_fonts_folder(), time_util.get_timer());
-                            } else {
-                                update_clock(offscreen, clock_data.get_timer_face(), &time_util, clock_data.get_fonts_folder(), time_util.get_timer()); // update with the current time on the timer
+                            if (timer->is_started()) {      // tick only if the timer is started
+                                int current_tick = timer->tick(clock_data.get_timer_hold());
+
+                                if (current_tick == 0) {    // tick is 0, the timer has just ended
+                                    if (clock_data.get_notify_on_timer_completion())
+                                        telegram_bot.send_message("Your timer has just ended!",true);  // send a push notification when a timer has completed if configured true in the config
+
+                                    timer_notify = true;    // set to true to begin the blinking/buzzing as applicable
+                                }
                             }
+
+                            // the default next face to push to the clock, if we can blink then it will go to empty every other second
+                            matrix_clock::clock_face* next_timer_face = clock_data.get_timer_face();
+
+                            if (timer->in_hold_period()) {
+                                if (timer_notify) { // buzz and show the clock face every other second starting right when the timer finishes
+                                    if (clock_data.get_buzzer_pin() != -1)
+                                        digitalWrite(clock_data.get_buzzer_pin(), HIGH);
+                                } else {
+                                    if (clock_data.can_blink())
+                                        next_timer_face = clock_data.get_empty_face();
+
+                                    if (clock_data.get_buzzer_pin() != -1)  // stop buzzing and go black after every other second
+                                        digitalWrite(clock_data.get_buzzer_pin(), LOW);
+                                }
+
+                                timer_notify = !timer_notify;   // flip the flag variable for the next loop
+                            }
+
+                            update_clock(offscreen, next_timer_face, &time_util, clock_data.get_fonts_folder(), timer);     // update the clock face with the timer info and the timer face to show
                         } else {
-                            update_clock(offscreen, clock_data.get_current(), &time_util, clock_data.get_fonts_folder(), nullptr); // update only if the clock is on
+                            update_clock(offscreen, clock_data.get_current(), &time_util, clock_data.get_fonts_folder(), nullptr); // update normally if we do not have a timer
                         }
 
                         offscreen = matrix->SwapOnVSync(offscreen);

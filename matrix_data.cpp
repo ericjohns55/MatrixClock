@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <wiringPi.h>
 #include <jsoncpp/json/json.h>
 #include "matrix_clock.h"
 
@@ -16,6 +17,7 @@ namespace matrix_clock {
         empty = new clock_face("~empty~", matrix_color(matrix_prebuilt_colors::black));  // create an empty clock face in the background
         override_interface = false;
         force_update = false;
+        timer_notify_on_complete = false;
         clock_on = true;
         timer_hold = 300;
         timer_blink = false;
@@ -200,6 +202,8 @@ namespace matrix_clock {
 
             set_timer_hold(timer_data["display_time_while_ended"].asInt());
             set_timer_blink(timer_data["blink"].asBool());
+            set_buzzer_pin(timer_data["buzzer_pin"].asInt());
+            set_notify_on_complete(timer_data["notify_on_complete"].asBool());
 
             matrix_clock::matrix_color bg_color;
 
@@ -273,6 +277,11 @@ namespace matrix_clock {
             std::cerr << "Could not parse JSON values: " << exception.what() << std::endl;  // print out the error to help the user find their error
             return false;
         }
+    }
+
+    void matrix_data::set_buzzer_pin(int pin) {
+        buzzer_pin = pin;
+        pinMode(buzzer_pin, OUTPUT);
     }
 }
 
