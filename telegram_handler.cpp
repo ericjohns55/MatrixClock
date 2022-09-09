@@ -26,6 +26,10 @@ namespace matrix_telegram_integration {
     // returns the timer control board for the /timer and /stopwatch commands
     TgBot::InlineKeyboardMarkup::Ptr get_timer_controls(void);
 
+    // sends a telegram message asynchronously to prevent visual stutters in the program
+    // these stutters are most visible when you see a seconds variable, calling this method in a thread fixes it
+    void push_telegram_separate_thread(std::string message, TgBot::Bot* bot, std::int64_t chat_id, bool dismissable);
+
     // sends a message to the defined chat_id with an inline keyboard containing
     // a single dismiss button that will delete the message in chat
     void send_dismiss_keyboard(std::string message, TgBot::Bot* bot, std::int64_t chat_id);
@@ -41,14 +45,6 @@ namespace matrix_telegram_integration {
     void matrix_telegram::enable_bot() {
         std::thread poll_bot(bot_handler, bot, matrixData, util); // starts the bot in a separate thread
         poll_bot.detach();  // detach so the thread does not die when we leave the method scope
-    }
-
-    void matrix_telegram::send_message(std::string message, bool dismiss_button) const {
-        if (!dismiss_button) {
-            bot->getApi().sendMessage(chat_id, message);
-        } else {
-            send_dismiss_keyboard(message, bot, chat_id);
-        }
     }
 
     void matrix_telegram::check_send_notifications(int hour, int minute, int day_of_week) {
@@ -398,19 +394,33 @@ namespace matrix_telegram_integration {
         }
     }
 
+    void push_telegram_separate_thread(std::string message, TgBot::Bot* bot, std::int64_t chat_id, bool dismissable) {
+        if (dismissable) {
+            TgBot::InlineKeyboardMarkup::Ptr message_keyboard(new TgBot::InlineKeyboardMarkup);
+            std::vector<TgBot::InlineKeyboardButton::Ptr> dismiss_button_row;
+
+            TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
+            dismiss_button->text = "Dismiss";
+            dismiss_button->callbackData = "command_dismiss";
+
+            dismiss_button_row.push_back(dismiss_button);
+            message_keyboard->inlineKeyboard.push_back(dismiss_button_row);
+
+            // set the keyboards title to be the push notification so the dismiss button is under
+            bot->getApi().sendMessage(chat_id, message, false, 0, message_keyboard, "Markdown");
+        } else {
+            bot->getApi().sendMessage(chat_id, message);
+        }
+    }
+
+    void matrix_telegram::send_message(std::string message, bool dismiss_button) const {
+        std::thread send_async(push_telegram_separate_thread, message, bot, chat_id, dismiss_button);   // send asynchronous to prevent visual stutters in the clock update loop
+        send_async.detach();
+    }
+
     void send_dismiss_keyboard(std::string message, TgBot::Bot* bot, std::int64_t chat_id) {
-        TgBot::InlineKeyboardMarkup::Ptr message_keyboard(new TgBot::InlineKeyboardMarkup);
-        std::vector<TgBot::InlineKeyboardButton::Ptr> dismiss_button_row;
-
-        TgBot::InlineKeyboardButton::Ptr dismiss_button(new TgBot::InlineKeyboardButton);   // add a dismiss button for ease of clearing push notifications
-        dismiss_button->text = "Dismiss";
-        dismiss_button->callbackData = "command_dismiss";
-
-        dismiss_button_row.push_back(dismiss_button);
-        message_keyboard->inlineKeyboard.push_back(dismiss_button_row);
-
-        // set the keyboards title to be the push notification so the dismiss button is under
-        bot->getApi().sendMessage(chat_id, message, false, 0, message_keyboard, "Markdown");
+        std::thread send_async(push_telegram_separate_thread, message, bot, chat_id, true);
+        send_async.detach();
     }
 
     TgBot::InlineKeyboardMarkup::Ptr get_timer_controls(void) {
