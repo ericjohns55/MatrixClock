@@ -438,7 +438,7 @@ namespace matrix_clock {
             std::string bot_token;
             std::int64_t bot_chat_id;
             std::string fonts_folder;
-            bool config_recently_reloaded;
+            bool skip_next_second;
             bool override_interface;
             bool force_update;
             bool clock_on;
@@ -515,15 +515,17 @@ namespace matrix_clock {
             // set the clock on (true) or off (false)
             inline void set_clock_on(bool on) { clock_on = on; }
 
-            // check whether the config was recently reloaded
+            // checks to see whether we should skip the next second or not
+            // important because we want to check whether the config was recently reloaded
             // we want to check this because the telegram bot runs on a separate thread so it is possible
             // that a natural update could run while we are clearing it
             // in this scenario we want to make sure it is not in the process of being reloaded while we are accessing
             // data because it could potentially become null halfway through updating
-            inline bool check_recent_reload(void) const { return config_recently_reloaded; }
+            // the same reason as the configuration reload is used but for the timer as well
+            inline bool skip_second(void) const { return skip_next_second; }
 
-            // check whether the config was recently reloaded
-            inline void set_recent_reload(bool reloaded)  { config_recently_reloaded = reloaded; }
+            // check whether we should skip the next second of the clock loop
+            inline void set_skip_second(bool skip)  { skip_next_second = skip; }
 
             // adds the timer clock face
             inline void set_timer_face(clock_face* new_timer_face) { timer_face = new_timer_face; }

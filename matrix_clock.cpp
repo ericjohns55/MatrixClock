@@ -158,7 +158,7 @@ int main(int argc, char* argv[]) {
         // only run the following code if the seconds have changed OR if a clock face has demanded an immediate update
         // otherwise sleep for 0.2 seconds
         if (previous_second != new_second) {
-            if (!clock_data.check_recent_reload()) {   // we want to skip an extra second if the config was recently reloaded, more information in header file
+            if (!clock_data.skip_second()) {   // we want to skip an extra second if the config was recently reloaded or if a timer started, more information in header file
                 bool new_minute = times[2] == 0;    // create boolean for if the minute changed
                 previous_second = new_second;       // update previous second for next loop
 
@@ -235,14 +235,14 @@ int main(int argc, char* argv[]) {
                     }
                 }
             } else {
-                clock_data.set_recent_reload(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
+                clock_data.set_skip_second(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
                 clock_data.update_clock_face(times[3], times[1], time_util.get_day_of_week());
             }
         }
 
         // sleep for 0.2 seconds and check again
         // we do this because C++ system time is not the most accurate
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     // free up the matrix memory

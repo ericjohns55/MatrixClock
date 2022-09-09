@@ -46,8 +46,6 @@ namespace matrix_clock {
             } else {
                 tick_num++; // it is a stopwatch, count up one
             }
-
-            calculate_current_time();   // calculate the tick time for display later on
         }
 
         if (hold_ending >= hold_max) {
@@ -55,8 +53,9 @@ namespace matrix_clock {
             return hold_ending;   // the hold period just ended, return false as well
         }
 
-        // return the tick num if we are still actively ticking AND not in the hold period, otherwise return the hold ending as a negative (negative means it is in the hold period)
-        return (tick_num >= 0 && hold_ending < 1) ? tick_num : hold_ending * -1;
+        // return a negative hold ending if we are in the hold ending period to specify that
+        // otherwise return tick_num to show how far we are in the timer
+        return (hold_ending > 0) ? hold_ending * -1 : tick_num;
     }
 
     bool matrix_timer::can_tick(int hold_max) const {
@@ -64,7 +63,7 @@ namespace matrix_clock {
     }                                                                       // or it is not started and the hour isnt -1 (at this point we display it on the screen as non started)
 
     std::string matrix_timer::format_timer() {
-        calculate_current_time();   // force another hour/minute/second update
+        calculate_current_time();   // calculate the tick time for display
 
         std::stringstream stream;
 
