@@ -303,7 +303,7 @@ namespace matrix_telegram_integration {
                 } else if (query->data == "command_ping") {
                     send_dismiss_keyboard("Bot is working correctly!", bot, query->message->chat->id);
                 } else if (query->data == "command_reload_config") {
-                    container->set_skip_second(true); // skip a second because of the config update
+                    container->set_skip_second(1); // skip a second because of the config update
                     container->load_clock_data();
                     var_util->set_weather_url(container->get_weather_url());    // update the weather URL in case it changed and poll weather again
                     var_util->poll_weather();
@@ -347,7 +347,7 @@ namespace matrix_telegram_integration {
                 } else if (query->data == "command_timer_start") {
                     if (var_util->has_timer()) {
                         var_util->get_timer()->start_timer();       // only start the timer if we have one
-                        container->set_skip_second(true);           // skip a second because the timer may be offset from telegram
+                        container->set_skip_second(2);           // skip two seconds because the timer may be offset from telegram
                         container->set_update_required(true);       // force update
                     } else {
                         send_dismiss_keyboard("There is no timer to start.", bot, query->message->chat->id);

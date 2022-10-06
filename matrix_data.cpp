@@ -283,5 +283,14 @@ namespace matrix_clock {
         buzzer_pin = pin;
         pinMode(buzzer_pin, OUTPUT);
     }
+
+    bool matrix_data::skip_second(void) {
+        if (skip_seconds > 0) {
+            skip_seconds--;
+            return true;
+        }
+
+        return false;
+    }
 }
 

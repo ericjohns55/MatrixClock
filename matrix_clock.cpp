@@ -235,7 +235,6 @@ int main(int argc, char* argv[]) {
                     }
                 }
             } else {
-                clock_data.set_skip_second(false);   // disable the recent reload and grab the current clock face again (since it was just cleared)
                 clock_data.update_clock_face(times[3], times[1], time_util.get_day_of_week());
             }
         }
