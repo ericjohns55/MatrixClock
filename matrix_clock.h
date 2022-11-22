@@ -195,9 +195,9 @@ namespace matrix_clock {
     class variable_utility {
         private:
             std::string weather_url;
-            int temp, real_feel, humidity;
+            int temp, real_feel, humidity, day_high, day_low;
             float wind_speed;
-            std::string short_forecast, forecast;
+            std::string short_forecast, forecast, day_forecast;
             std::string formatted_date, month_name, day_name;
             int month_num, day_of_month, day_of_week, year;
             matrix_timer* timer;
@@ -245,6 +245,14 @@ namespace matrix_clock {
             //      poll_weather() must be called before this is usable
             inline int get_humidity(void) const { return humidity; }
 
+            // returns the day's low
+            //      poll_weather() must be called before this is usable
+            inline int get_day_low(void) const { return day_low; }
+
+            // returns the day's high
+            //      poll_weather() must be called before this is usable
+            inline int get_day_high(void) const { return day_high; }
+
             // returns the current wind speed rounded to one decimal place
             //      poll_weather() must be called before this is usable
             inline float get_wind_speed(void) const { return wind_speed; }
@@ -253,11 +261,15 @@ namespace matrix_clock {
             //      poll_weather() must be called before this is usable
             //      this string will typically be too long to fit on the matrix but is included
             //      in case someone wants to parse it further and wrap around
-            inline std::string get_forecast(void) const { return forecast; }
+            inline std::string get_current_forecast(void) const { return forecast; }
 
             // returns the current weather outside as one word
             //      poll_weather() must be called before this is usable
-            inline std::string get_forecast_short(void) const { return short_forecast; }
+            inline std::string get_current_forecast_short(void) const { return short_forecast; }
+
+            // returns the full day's forecast outside as one word
+            //      poll_weather() must be called before this is usable
+            inline std::string get_day_forecast(void) const { return day_forecast; }
 
             // returns the date formatted as MM-DD-YYYY
             //      poll_date() must be called before this is usable

@@ -80,14 +80,21 @@ namespace matrix_clock {
 
             // try parse
             if (reader->parse(httpDataString, httpDataString + httpData->size(), &jsonData, &error)) {
-                forecast = jsonData["weather"][0]["description"].asString();        // load weather info from json
-                short_forecast = jsonData["weather"][0]["main"].asString();
-                temp = round(jsonData["main"]["temp"].asFloat());
-                real_feel = round(jsonData["main"]["feels_like"].asFloat());
-                wind_speed = round(jsonData["wind"]["speed"].asFloat() * 10) / 10.0;
-                humidity = round(jsonData["main"]["humidity"].asFloat());
+                forecast = jsonData["current"]["weather"][0]["description"].asString();        // load weather info from json
+                short_forecast = jsonData["current"]["weather"][0]["main"].asString();
+                day_forecast = jsonData["daily"][0]["weather"][0]["main"].asString();
+                temp = round(jsonData["current"]["temp"].asFloat());
+                day_low = round(jsonData["daily"][0]["temp"]["min"].asFloat());
+                day_high = round(jsonData["daily"][0]["temp"]["max"].asFloat());
+                real_feel = round(jsonData["current"]["feels_like"].asFloat());
+                wind_speed = round(jsonData["current"]["wind_speed"].asFloat() * 10) / 10.0;
+                humidity = round(jsonData["current"]["humidity"].asFloat());
 
                 if (short_forecast.find("Thunder") != std::string::npos) {    // edge case because Thunderstorms does not fit on matrix
+                    short_forecast = "T-Storms";
+                }
+
+                if (day_forecast.find("Thunder") != std::string::npos) {
                     short_forecast = "T-Storms";
                 }
             } else { // could not parse, something went wrong
@@ -127,10 +134,13 @@ namespace matrix_clock {
         replace_string(parsed_text, "{hour24}", std::to_string(times[3]));
         replace_string(parsed_text, "{ampm}", times[3] < 12 ? "am" : "pm");
         replace_string(parsed_text, "{temp}", std::to_string(get_temp()));
+        replace_string(parsed_text, "{day_low}", std::to_string(get_day_low()));
+        replace_string(parsed_text, "{day_high}", std::to_string(get_day_high()));
         replace_string(parsed_text, "{temp_feel}", std::to_string(get_real_feel()));
         replace_string(parsed_text, "{humidity}", std::to_string(get_humidity()));
-        replace_string(parsed_text, "{forecast}", get_forecast());
-        replace_string(parsed_text, "{forecast_short}", get_forecast_short());
+        replace_string(parsed_text, "{forecast}", get_current_forecast());
+        replace_string(parsed_text, "{forecast_short}", get_current_forecast_short());
+        replace_string(parsed_text, "{day_forecast}", get_day_forecast());
         replace_string(parsed_text, "{date_format}", get_formatted_date());
         replace_string(parsed_text, "{month_name}", get_month_name());
         replace_string(parsed_text, "{day_name}", get_day_name());

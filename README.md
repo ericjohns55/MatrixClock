@@ -1,5 +1,6 @@
 
 
+
 # MatrixClock
 A clock program written in C++ that runs off of an RGB LED Matrix.
 
@@ -35,7 +36,7 @@ Night Time Clock Face
 
 ### Required Weather Portion:
 1) Generate an API key from [OpenWeatherMap](https://openweathermap.org/)
-2) Create a link to poll weather data from (will be used when you run the program)
+2) Create a link to the OneCall 2.5 API to poll weather data from (will be used when you run the program)
 
 ## Installation
 1) Install the required libraries listed above 
@@ -229,10 +230,13 @@ Here is a list of the current variables:
 | {second}   | the current second|
 | {ampm}   | prints out am if it is before noon, pm if not|
 | {temp}   | the current temperature outside|
+| {day_low} | the low for the day
+| {day_high} | the high for the day
 | {temp_feel}   | the real feel outside|
 | {humidity}   | the humidity outside|
 | {forecast}   | the forecast outside (NOTE: this is typically too long to fit on the screen)|
 | {forecast_short}   | a one word description of the weather outside (this can always fit on a screen)|
+| {day_forecast} | the forecast for the entire day
 | {date_format}   | the date formatted in MM-DD-YYYY format|
 | {day_name}   | the current hour in 24 hour format (0-23)|
 | {month_name}   | the name of the current month|

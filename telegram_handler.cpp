@@ -330,11 +330,14 @@ namespace matrix_telegram_integration {
                     stream << (times[3] < 12 ? "am" : "pm") << std::endl << std::endl;
 
                     // no need to print out fake data if it is not correct
-                    if (var_util->get_forecast_short() != "~Error~") {
+                    if (var_util->get_current_forecast_short() != "~Error~") {
                         // print out the weather
-                        stream << "Today's weather forecast: " << var_util->get_forecast() << std::endl;
+                        stream << "Today's weather forecast: " << var_util->get_day_forecast() << std::endl;
+                        stream << "The current conditions are " << var_util->get_current_forecast();
+                        stream << " (" << var_util->get_current_forecast_short() << ")." << std::endl;
                         stream << "It is currently " << var_util->get_temp() << "F (" << var_util->get_real_feel() << "F real feel) ";
                         stream << "with a humidity of " << var_util->get_humidity() << "%" << std::endl;
+                        stream << "The days low is " << var_util->get_day_low() << "F with a high of " << var_util->get_day_high() << "F " << std::endl;
                         stream << "The wind is currently blowing at " << var_util->get_wind_speed() << "mph" << std::endl;
                     } else {
                         stream << "Could not load current weather data. Check your weather URL in your matrix config file." << std::endl;
