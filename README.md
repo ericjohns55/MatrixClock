@@ -36,7 +36,7 @@ Night Time Clock Face
 
 ### Required Weather Portion:
 1) Generate an API key from [OpenWeatherMap](https://openweathermap.org/)
-2) Create a link to the OneCall 2.5 API to poll weather data from (will be used when you run the program)
+2) Create a link to the OneCall 3.0 API to poll weather data from (as of June 2024 OpenWeatherMap will be phasing out OneCall 2.5, so you must upgrade to 3.0)
 
 ## Installation
 1) Install the required libraries listed above 
