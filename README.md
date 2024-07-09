@@ -71,6 +71,7 @@ The following is the default night time clock face in the program.
     "parallel": 1,
     "brightness": 50,
     "refresh_rate_limit": 0,
+    "disable_hardware_pulse": false,
     "gpio_slowdown": 3
   },
   "clock_data": {

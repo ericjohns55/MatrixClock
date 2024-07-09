@@ -275,6 +275,7 @@ void load_matrix_defaults(string config_file, RGBMatrix::Options* options, rgb_m
         options->chain_length = matrix_data["chain"].asInt();
         options->parallel = matrix_data["parallel"].asInt();
         options->brightness = matrix_data["brightness"].asInt();
+        options->disable_hardware_pulsing = matrix_data["disable_hardware_pulse"].asBool();
         options->limit_refresh_rate_hz = matrix_data["refresh_rate_limit"].asInt();
         runtime_options->gpio_slowdown = matrix_data["gpio_slowdown"].asInt();
     } catch (const Json::Exception& exception) {
