@@ -107,7 +107,7 @@ namespace matrix_telegram_integration {
             clock_faces_keyboard->inlineKeyboard.push_back(clear_row);
 
             // send the clock face keyboard to the user
-            bot->getApi().sendMessage(message->chat->id, "\U0001F553 Clock Faces \U0001F553", false, 0, clock_faces_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0001F553 Clock Faces \U0001F553", nullptr, 0, clock_faces_keyboard, "Markdown");
 
             // SECOND KEYBOARD: clock controls
 
@@ -145,7 +145,7 @@ namespace matrix_telegram_integration {
             clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row2);
             clock_controls_keyboard->inlineKeyboard.push_back(clock_controls_row3);
 
-            bot->getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", false, 0, clock_controls_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0001F570 Clock Controls \U0001F570", nullptr, 0, clock_controls_keyboard, "Markdown");
 
             // THIRD KEYBOARD: timer controls
 
@@ -176,7 +176,7 @@ namespace matrix_telegram_integration {
             timer_controls_keyboard->inlineKeyboard.push_back(timer_row1);
             timer_controls_keyboard->inlineKeyboard.push_back(timer_row2);
 
-            bot->getApi().sendMessage(message->chat->id, "\U0000231A Timer Controls \U0000231A", false, 0, timer_controls_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0000231A Timer Controls \U0000231A", nullptr, 0, timer_controls_keyboard, "Markdown");
 
             // FOURTH KEYBOARD: system controls
 
@@ -202,7 +202,7 @@ namespace matrix_telegram_integration {
             system_controls_keyboard->inlineKeyboard.push_back(system_row);
             system_controls_keyboard->inlineKeyboard.push_back(data_row);
 
-            bot->getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", false, 0, system_controls_keyboard, "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "\U0001F916 System Controls \U0001F916", nullptr, 0, system_controls_keyboard, "Markdown");
         });
 
         bot->getEvents().onCommand("timer", [&bot, &var_util] (TgBot::Message::Ptr message) {
@@ -257,7 +257,7 @@ namespace matrix_telegram_integration {
                 if (second != 0) timer_info << second << " second(s).";
 
                 // send the user information about the timer they created as well as timer controls again
-                bot->getApi().sendMessage(message->chat->id, timer_info.str(), false, 0, get_timer_controls(), "Markdown");
+                bot->getApi().sendMessage(message->chat->id, timer_info.str(), nullptr, 0, get_timer_controls(), "Markdown");
             } else {
                 bot->getApi().sendMessage(message->chat->id, "Invalid use of command. Proper usage /timer [h] [m] [s] or /timer [m] [s]");
             }
@@ -268,7 +268,7 @@ namespace matrix_telegram_integration {
                 bot->getApi().deleteMessage(message->chat->id, message->messageId);
             }
 
-            bot->getApi().sendMessage(message->chat->id, "Created a stopwatch.", false, 0, get_timer_controls(), "Markdown");
+            bot->getApi().sendMessage(message->chat->id, "Created a stopwatch.", nullptr, 0, get_timer_controls(), "Markdown");
 
             matrix_clock::matrix_timer* timer = new matrix_clock::matrix_timer(-2, -2, -2);
             var_util->set_timer(timer);
@@ -352,6 +352,7 @@ namespace matrix_telegram_integration {
                         var_util->get_timer()->start_timer();       // only start the timer if we have one
                         container->set_skip_second(2);           // skip two seconds because the timer may be offset from telegram
                         container->set_update_required(true);       // force update
+                        bot->getApi().deleteMessage(query->message->chat->id, query->message->messageId);
                     } else {
                         send_dismiss_keyboard("There is no timer to start.", bot, query->message->chat->id);
                     }
@@ -410,7 +411,7 @@ namespace matrix_telegram_integration {
             message_keyboard->inlineKeyboard.push_back(dismiss_button_row);
 
             // set the keyboards title to be the push notification so the dismiss button is under
-            bot->getApi().sendMessage(chat_id, message, false, 0, message_keyboard, "Markdown");
+            bot->getApi().sendMessage(chat_id, message, nullptr, 0, message_keyboard, "Markdown");
         } else {
             bot->getApi().sendMessage(chat_id, message);
         }
